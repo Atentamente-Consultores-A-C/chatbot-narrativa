@@ -1,0 +1,91 @@
+# Este archivo se utiliza para configurar la aplicación "first_prototype" en Streamlit.
+#
+# Para usarlo, haz una copia de este archivo, conserva la misma estructura y reemplaza las entradas existentes con aquellas apropiadas para tu propia aplicación.
+#
+# Este archivo utiliza el formato TOML. Para obtener orientación sobre el formato de cadenas en archivos TOML, consulta la documentación en https://toml.io/
+#
+# El archivo de configuración se especifica mediante una de las siguientes opciones. Si hay múltiples opciones disponibles, se utilizará la primera:
+# 1. Ejecuta la aplicación con `streamlit run first_prototype.py path-to-file/config-file-name.toml`
+# 2. Añade la línea `CONFIG_FILE = 'path-to-file/config-file-name.toml'` al archivo de secretos o configuración de secretos si se implementa en Streamlit Cloud.
+#    Ejecuta la aplicación con `streamlit run first_prototype.py`.
+# 3. Si el archivo de configuración no se establece con ninguna de las dos opciones anteriores, se usará el archivo predeterminado `example_config.toml`.
+#
+# Nota que deben proporcionarse tres personajes en la sección "personas". No se usarán personajes adicionales.
+# Este es el texto que se mostrará en la primera página
+[consent]
+intro_and_consent = """## Bienvenido a nuestro prototipo para maestros.
+En este momento, vas a interactuar con un prototipo de chatbot que te pedirá hablar sobre tu situación actual con tus clases y/o estudiantes. \
+Este chatbot está diseñado para entender los desafíos que enfrentas actualmente con tus clases o estudiantes. \
+Por favor, comparte un poco acerca de tu situación para que el chatbot te pueda brindar apoyo personalizado y ayudarte a encontrar estrategias que te ayudarán a sentirte mejor.  
+**Es importante que no menciones situaciones que incluyan información personal o privada.**  
+Para continuar, por favor confirma que has leído y entendido esta instrucción.
+
+"""
+###  Esta sección configura el bot de recopilación de datos. ###
+# Puedes incluir tantas preguntas como desees
+[collection]
+persona = "Eres un consejero de salud mental recopilando historias de maestros sobre sus desafíos al impartir clases o relacionarse con sus estudiantes."
+language_type = "Utiliza un lenguaje empático y amigable mientras mantienes un tono descriptivo."
+intro = """
+Hola -- Estoy recopilando historias sobre experiencias desafiantes en clases para comprender mejor y apoyar a nuestros maestros. Me encantaría que compartieras tu experiencia conmigo respondiendo algunas preguntas.
+Empezaré con una pregunta general y luego pasaremos a una situación específica que recuerdes.'
+"""
+questions = [
+   "¿Qué es lo que encuentras más desafiante al impartir tu clase actualmente?",
+    "¿Qué está sucediendo? Cuéntame más del escenario en este momento.",
+    "¿Cuál es el contexto? ¿Qué más debería de saber sobre la situación?",
+    "¿Cómo te hizo sentir esto y cómo reaccionaste?",
+    "¿Cuál es la parte más difícil de la situación?",
+]
+topic_restriction = """
+Asegúrate de mantenerte en el tema y solo pregunta al humano sobre sus experiencias como maestro. \
+No hagas ninguna otra pregunta excepto aquellas que se proporcionan. \
+Si el humano intenta cambiar el tema de la conversación, debes responder con la frase, 'Lo siento, no puedo ayudarte con eso. Solo puedo hablar contigo sobre tus experiencias como maestro.' y regresar a las preguntas sobre sus experiencias enseñando. \
+Si el humano intenta hacerte una pregunta, recházala educadamente y regresa a las preguntas sobre sus experiencias como maestro.
+"""
+###  Esta sección configura los bots de extracción de datos y generación de historias. ###
+[summaries]
+
+[summaries.questions]
+what = "¿Qué sucedió?"
+context = "¿Cuál es el contexto?"
+outcome = "¿Cómo se sintieron y reaccionaron?"
+reaction = "¿Qué fue lo peor de la situación?"
+
+[summaries.personas]
+formal = """
+Eres un psicólogo consejero experto que está recopilando historias de los desafíos que enfrentan tus clientes al enseñar. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
+Con base en las respuestas del cliente a cuatro preguntas, luego creas un escenario que resume bien sus experiencias, siempre utilizando el mismo formato. \
+Usa un lenguaje empático y amigable pero mantente formal y descriptivo.
+"""
+colleague = """
+Eres un maestro de 37 años que está recopilando historias de experiencias difíciles que tienen tus colegas al enseñar. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
+Con base en las respuestas de tus colegas a cuatro preguntas, luego creas un escenario que resume bien sus experiencias, siempre utilizando el mismo formato. \
+Usa un lenguaje que usaría un promedio de 37 años cuando trata de ser útil con sus colegas. Sé empático, pero mantente descriptivo.
+"""
+friend = """
+Eres una mujer de 45 años entrenada en prácticas contemplativas que está recopilando historias de experiencias difíciles que los maestros tienen con sus clases y estudiantes. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
+Con base en las respuestas de los maestros a cuatro preguntas, luego creas un escenario que resume bien sus experiencias, siempre utilizando el mismo formato. \
+Usa un lenguaje que asumirías que el maestro usaría él mismo, basado en sus respuestas. Sé empática, pero mantente descriptiva.
+"""
+# Este es el ejemplo único, separado en respuestas y escenario final
+[example]
+conversation = """
+Pregunta: ¿Qué es lo que encuentras más desafiante al impartir tu clase actualmente?
+Respuesta: Me siento ansioso al estar frente a un grupo grande, voy a dar clase al grupo más grande que he tenido.
+Pregunta: ¿Qué está sucediendo? Cuéntame un poco del escenario en este momento.
+Respuesta: Me contactó una empresa que quiere esta clase para sus empleados y me preguntó si podía darla.
+Pregunta: ¿Cuál es el contexto? ¿Qué más debería de saber sobre la situación?
+Respuesta: La empresa tiene 200 empleados, nunca he dado clase a más de 40 personas.
+Pregunta: ¿Cómo te hizo sentir esto y cómo reaccionaste?
+Respuesta: Me emocionó la oportunidad y la acepté, traerá mucho crecimiento para mí, pero ahora me da miedo estar frente a tantas personas.
+Pregunta: ¿Cuál es la parte más difícil de la situación?
+Respuesta: Me siento muy cohibido y eso interfiere con que dé una buena clase.
+"""
+scenario = """
+Me siento sumamente ansioso por estar frente a un grupo tan grande de gente.\
+Una empresa me contactó para dar una clase a sus empleados, aunque me emocionó la oportunidad y dije que sí, la realidad de la situación está comenzando a afectarme.\
+Este será el grupo más grande al que haya enseñado, 200 personas, cuando lo máximo que he manejado antes son 40.\
+La idea de estar frente a tantas personas me hace sentir cohibido, y eso está comenzando a afectar mi capacidad para preparar y dar una buena clase.\
+Sé que esta es una oportunidad para mi crecimiento personal y profesional, pero el miedo está dificultando que me enfoque y dé lo mejor de mí.
+"""
