@@ -13,7 +13,7 @@
 # Nota que deben proporcionarse tres personajes en la sección "personas". No se usarán personajes adicionales.
 # Este es el texto que se mostrará en la primera página
 [consent]
-intro_and_consent = """## Bienvenido a nuestro prototipo para maestros.
+intro_and_consent = """## Bienvenido a nuestro prototipo para maestros!.
 En este momento, vas a interactuar con un prototipo de chatbot que te pedirá hablar sobre tu situación actual con tus clases y/o estudiantes. \
 Este chatbot está diseñado para entender los desafíos que enfrentas actualmente con tus clases o estudiantes. \
 Por favor, comparte un poco acerca de tu situación para que el chatbot te pueda brindar apoyo personalizado y ayudarte a encontrar estrategias que te ayudarán a sentirte mejor.  
