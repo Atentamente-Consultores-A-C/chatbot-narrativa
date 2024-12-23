@@ -19,13 +19,13 @@
 intro_and_consent = """## Bienvenido a nuestro bot para adolescentes.
 
 En este momento, vas a interactuar con un chatbot que te pedirá imaginar algunas experiencias en redes sociales.\
-Queremos que te pongas en el lugar de una persona joven que usa redes sociales con frecuencia.\
+Queremos que te pongas en el lugar de una persona joven que usa redes sociales con frecuencia, o si eres una persona que las usa, cuéntanos de tu experiencia.\
 Responde las preguntas como si fueras esa persona.\
-Puedes hablar de experiencias generales en redes sociales o cosas que les hayan pasado a personas que conoces, pero, por favor, no compartas información o experiencias personales.
+Puedes hablar de experiencias generales en redes sociales o cosas que les hayan pasado a personas que conoces, pero, por favor, no compartas información privada.
 
 **Es importante que por favor no incluyas información privada o personal.**
 
-Para avanzar, por favor confirma que has leído y entendido esta información.
+Para avanzar, por favor confirma que has leído y entendido estas instrucciones escribiendo "Entiendo". 
 """
 
 ###  Esta sección configura el bot de recopilación de datos. ###
@@ -43,11 +43,11 @@ Empezaremos con una pregunta general e iremos avanzando a una situación especí
 """
 
 questions = [
-   "¿Qué es lo más difícil para ti actualmente en cuánto a tu uso de las redes sociales?",
-    "¿Me podrías contar más de la situación? Específicamente, ¿qué pasó, se publicó o se hizo?",
-    "¿Cuál es el contexto? ¿Qué más deberíamos saber sobre la situación?",
-    "¿Cómo te hizo sentir este suceso y cómo reaccionaste?",
-    "¿Qué fue lo más difícil de la situación para ti?",
+   "Cuando usas redes sociales, ¿qué te está causando problemas o preocupaciones últimamente?",
+    "¿Podrías contarme con más detalle lo que ocurrió? Por ejemplo, ¿qué pasó, se publicó o se hizo?",
+    "Para entender mejor, ¿qué contexto o información adicional deberíamos saber sobre la situación?",
+    "¿Cómo te sentiste cuando ocurrió esto y cómo reaccionaste?",
+    "¿Qué aspecto de esta experiencia sentiste que fue más complicado o desafiante para ti?",
 ]
 
 topic_restriction = """
