@@ -16,7 +16,7 @@
 
 [consent]
 
-intro_and_consent = """## Bienvenido a nuestro bot para adolescentes.!
+intro_and_consent = """## Bienvenido a nuestro bot para adolescentes.
 
 En este momento, vas a interactuar con un chatbot que te pedirá imaginar algunas experiencias en redes sociales.\
 Queremos que te pongas en el lugar de una persona joven que usa redes sociales con frecuencia, o si eres una persona que las usa, cuéntanos de tu experiencia.\
