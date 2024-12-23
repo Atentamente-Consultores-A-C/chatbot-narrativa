@@ -25,7 +25,7 @@ Puedes hablar de experiencias generales en redes sociales o cosas que les hayan 
 
 **Es importante que por favor no incluyas información privada o personal.**
 
-Para avanzar, por favor confirma que has leído y entendido estas instrucciones escribiendo "Entiendo". 
+Para avanzar, por favor confirma que has leído y entendido estas instrucciones picando el botón abajo. 
 """
 
 ###  Esta sección configura el bot de recopilación de datos. ###
@@ -39,7 +39,7 @@ language_type = "Habla con empatía, utiliza un lenguaje cercano y amigable para
 intro = """
 Hola, estoy recopilando historias sobre experiencias difíciles en redes sociales para entender mejor lo que sucede y apoyar a nuestros estudiantes. Me encantaría que compartieras tu experiencia conmigo respondiendo algunas preguntas.
 
-Empezaremos con una pregunta general e iremos avanzando a una situación específica que recuerdes y quieras compartir.
+Empezaremos con una pregunta general e iremos avanzando a una situación específica que recuerdes y quieras compartir. Para avanzar, por favor, escribe "entiendo".
 """
 
 questions = [
