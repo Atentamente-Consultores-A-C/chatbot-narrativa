@@ -20,12 +20,11 @@ intro_and_consent = """## Bienvenido a nuestro bot para adolescentes.
 
 En este momento, vas a interactuar con un chatbot que te pedirá imaginar algunas experiencias en redes sociales.\
 Queremos que te pongas en el lugar de una persona joven que usa redes sociales con frecuencia, o si eres una persona que las usa, cuéntanos de tu experiencia.\
-Responde las preguntas como si fueras esa persona.\
 Puedes hablar de experiencias generales en redes sociales o cosas que les hayan pasado a personas que conoces, pero, por favor, no compartas información privada.
 
 **Es importante que por favor no incluyas información privada o personal.**
 
-Para avanzar, por favor confirma que has leído y entendido estas instrucciones picando el botón abajo. 
+Para avanzar, por favor confirma que has leído y entendido estas instrucciones presionando el botón abajo. 
 """
 
 ###  Esta sección configura el bot de recopilación de datos. ###
