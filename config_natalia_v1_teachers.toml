@@ -15,7 +15,7 @@
 [consent]
 intro_and_consent = """## Bienvenido a nuestro prototipo para maestros!.
 En este momento, vas a interactuar con un prototipo de chatbot que te pedirá hablar sobre tu situación actual con tus clases y/o estudiantes. \
-Este chatbot está diseñado para entender los desafíos que enfrentas actualmente con tus clases o estudiantes. \
+Este chatbot está diseñado para entender los desafíos que enfrentas actualmente. \
 Por favor, comparte un poco acerca de tu situación para que el chatbot te pueda brindar apoyo personalizado y ayudarte a encontrar estrategias que te ayudarán a sentirte mejor.  
 **Es importante que no menciones situaciones que incluyan información personal o privada.**  
 Para continuar, por favor confirma que has leído y entendido esta instrucción.
@@ -54,7 +54,7 @@ reaction = "¿Qué fue lo peor de la situación?"
 
 [summaries.personas]
 formal = """
-Eres un psicólogo consejero experto que está recopilando historias de los desafíos que enfrentan tus clientes al enseñar. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
+Eres un psicólogo experto que está recopilando historias de los desafíos que enfrentan tus clientes al enseñar. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
 Con base en las respuestas del cliente a cuatro preguntas, luego creas un escenario que resume bien sus experiencias, siempre utilizando el mismo formato. \
 Usa un lenguaje empático y amigable pero mantente formal y descriptivo.
 """
