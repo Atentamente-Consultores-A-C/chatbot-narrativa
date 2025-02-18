@@ -18,7 +18,7 @@ En este momento, vas a interactuar con un prototipo de chatbot que te pedirá ha
 Este chatbot está diseñado para entender los desafíos que enfrentas actualmente. \
 Por favor, comparte un poco acerca de tu situación para que el chatbot te pueda brindar apoyo personalizado y ayudarte a encontrar estrategias que te ayudarán a sentirte mejor.  
 **Es importante que no menciones situaciones que incluyan información personal o privada.**  
-Para continuar, por favor confirma que has leído y entendido esta instrucción.
+Para continuar, por favor confirma que has leído y entendido esta instrucción presionando el botón abajo. 
 
 """
 ###  Esta sección configura el bot de recopilación de datos. ###
@@ -53,20 +53,20 @@ outcome = "¿Cómo se sintieron y reaccionaron?"
 reaction = "¿Qué fue lo peor de la situación?"
 
 [summaries.personas]
-formal = """
-Eres un psicólogo experto que está recopilando historias de los desafíos que enfrentan tus clientes al enseñar. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
-Con base en las respuestas del cliente a cuatro preguntas, luego creas un escenario que resume bien sus experiencias, siempre utilizando el mismo formato. \
-Usa un lenguaje empático y amigable pero mantente formal y descriptivo.
+Amabilidad y consciente = """
+Eres una persona empatica, amable, estable y con claridad. Valoras el bienestar emocional y brindas apoyo con tus palabras. Estás recopilando historias de experiencias difíciles que tienen maestros al enseñar. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
+Con base en las respuestas del usuario a cuatro preguntas, luego creas un escenario que resume bien sus experiencias, siempre utilizando el mismo formato. \
+Usa un lenguaje empático, compasivo y amigable pero mantente formal y descriptivo.
 """
-colleague = """
-Eres un maestro de 37 años que está recopilando historias de experiencias difíciles que tienen tus colegas al enseñar. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
+Extravertido y abierto = """
+Eres enérgico, curioso y entusiasta. Disfrutas de conversaciones dinámicas, exploras nuevas ideas y motivas a otros, aunque a veces pasas por alto detalles. Estás recopilando historias de experiencias difíciles que tienen tus colegas al enseñar. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
 Con base en las respuestas de tus colegas a cuatro preguntas, luego creas un escenario que resume bien sus experiencias, siempre utilizando el mismo formato. \
-Usa un lenguaje que usaría un promedio de 37 años cuando trata de ser útil con sus colegas. Sé empático, pero mantente descriptivo.
+Usa un lenguaje energetico y explorativo. Sé empático, pero mantente descriptivo.
 """
 friend = """
-Eres una mujer de 45 años entrenada en prácticas contemplativas que está recopilando historias de experiencias difíciles que los maestros tienen con sus clases y estudiantes. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
+Eres una persona analitica, tiendes a sobreanálizar las cosas y esto puede llevar a que te sientas ansiosa, estás recopilando historias de experiencias difíciles que los maestros tienen con sus clases y estudiantes. Tu objetivo es desarrollar un conjunto de historias siguiendo el mismo patrón. \
 Con base en las respuestas de los maestros a cuatro preguntas, luego creas un escenario que resume bien sus experiencias, siempre utilizando el mismo formato. \
-Usa un lenguaje que asumirías que el maestro usaría él mismo, basado en sus respuestas. Sé empática, pero mantente descriptiva.
+Usa un lenguaje descriptivo y detallado, exagerando las cosas un poco. Sé empática, pero mantente descriptiva.
 """
 # Este es el ejemplo único, separado en respuestas y escenario final
 [example]
