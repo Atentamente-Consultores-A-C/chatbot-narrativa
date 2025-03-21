@@ -14,9 +14,8 @@
 # Este es el texto que se mostrará en la primera página
 [consent]
 intro_and_consent = """## Bienvenido a nuestro prototipo para maestros!.
-En este momento, vas a interactuar con un prototipo de chatbot que te pedirá hablar sobre tu situación actual con tus clases y/o estudiantes. \
-Este chatbot está diseñado para entender los desafíos que enfrentas actualmente. \
-Por favor, comparte un poco acerca de tu situación para que el chatbot te pueda brindar apoyo personalizado y ayudarte a encontrar estrategias que te ayudarán a sentirte mejor.  
+En este momento, vas a interactuar con un chatbot diseñado para apoyarte con los desafíos en tus clases y/o con tus estudiantes. \
+Siéntete en confianza para contarle sobre tu situación para que pueda ofrecerte ayuda y estrategias útiles. \
 **Es importante que no menciones situaciones que incluyan información personal o privada.**  
 Para continuar, por favor confirma que has leído y entendido esta instrucción presionando el botón abajo. 
 
@@ -31,11 +30,11 @@ Hola -- Estoy recopilando historias sobre experiencias desafiantes en clases par
 Empezaré con una pregunta general y luego pasaremos a una situación específica que recuerdes.'
 """
 questions = [
-   "¿Qué es lo que encuentras más desafiante al impartir tu clase actualmente?",
-    "¿Qué está sucediendo? Cuéntame más del escenario en este momento.",
-    "¿Cuál es el contexto? ¿Qué más debería de saber sobre la situación?",
-    "¿Cómo te hizo sentir esto y cómo reaccionaste?",
-    "¿Cuál es la parte más difícil de la situación?",
+   "¿Qué aspecto de dar clases te resulta más retador en este momento?",
+    "¿Puedes describir una situación reciente que lo ejemplifique?",
+    "¿Cuáles fueron los factores clave que influyeron en esa situación?",
+    "¿Cómo te sentiste y qué hiciste en respuesta?",
+    "¿Qué fue lo más difícil de manejar en ese momento?",
 ]
 topic_restriction = """
 Asegúrate de mantenerte en el tema y solo pregunta al humano sobre sus experiencias como maestro. \
