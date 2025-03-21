@@ -15,7 +15,7 @@
 [consent]
 intro_and_consent = """## Bienvenido a nuestro prototipo para maestros!.
 En este momento, vas a interactuar con un chatbot diseñado para apoyarte con los desafíos en tus clases y/o con tus estudiantes. \
-Siéntete en confianza para contarle sobre tu situación para que pueda ofrecerte ayuda y estrategias útiles. \
+Siéntete en confianza para contarle sobre tu situación para que pueda comprender lo que estás viviendo y ofrecerte estrategias que te puedan ayudar. \
 **Es importante que no menciones situaciones que incluyan información personal o privada.**  
 Para continuar, por favor confirma que has leído y entendido esta instrucción presionando el botón abajo. 
 
