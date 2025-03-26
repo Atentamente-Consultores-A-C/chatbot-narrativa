@@ -381,9 +381,9 @@ def click_selection_yes(button_num, scenario):
         'col1': st.session_state.response_1['output_scenario'],
         'col2': st.session_state.response_2['output_scenario'],
         'col3': st.session_state.response_3['output_scenario'],
-        'fb1': st.session_state['col1_fb'],
-        'fb2': st.session_state['col2_fb'],
-        'fb3': st.session_state['col3_fb']
+        # 'fb1': st.session_state['col1_fb'],
+        # 'fb2': st.session_state['col2_fb'],
+        # 'fb3': st.session_state['col3_fb']
     }
 
     st.session_state.scenario_package = {
