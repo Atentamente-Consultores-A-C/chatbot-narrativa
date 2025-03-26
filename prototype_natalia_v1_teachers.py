@@ -490,50 +490,50 @@ def reviewData(testing):
         with col1: 
             st.header("Scenario 1") 
             st.write(st.session_state.response_1['output_scenario'])
-            col1_fb = streamlit_feedback(
-                feedback_type="thumbs",
-                optional_text_label="[Optional] Please provide an explanation",
-                align='center',
-                key="col1_fb",
-                # this ensures that feedback cannot be submitted twice 
-                disable_with_score = disable['col1_fb'],
-                on_submit = collectFeedback,
-                args = ('col1',
-                        st.session_state.response_1['output_scenario']
-                        )
-            )
+            # col1_fb = streamlit_feedback(
+            #     feedback_type="thumbs",
+            #     optional_text_label="[Optional] Please provide an explanation",
+            #     align='center',
+            #     key="col1_fb",
+            #     # this ensures that feedback cannot be submitted twice 
+            #     disable_with_score = disable['col1_fb'],
+            #     on_submit = collectFeedback,
+            #     args = ('col1',
+            #             st.session_state.response_1['output_scenario']
+            #             )
+            # )
 
         with col2: 
             st.header("Scenario 2") 
             st.write(st.session_state.response_2['output_scenario'])
-            col2_fb = streamlit_feedback(
-                feedback_type="thumbs",
-                optional_text_label="[Optional] Please provide an explanation",
-                align='center',
-                key="col2_fb",
-                # this ensures that feedback cannot be submitted twice 
-                disable_with_score = disable['col2_fb'],            
-                on_submit = collectFeedback,
-                args = ('col2', 
-                        st.session_state.response_2['output_scenario']
-                        )
-            )        
+            # col2_fb = streamlit_feedback(
+            #     feedback_type="thumbs",
+            #     optional_text_label="[Optional] Please provide an explanation",
+            #     align='center',
+            #     key="col2_fb",
+            #     # this ensures that feedback cannot be submitted twice 
+            #     disable_with_score = disable['col2_fb'],            
+            #     on_submit = collectFeedback,
+            #     args = ('col2', 
+            #             st.session_state.response_2['output_scenario']
+            #             )
+            # )        
         
         with col3: 
             st.header("Scenario 3") 
             st.write(st.session_state.response_3['output_scenario'])
-            col3_fb = streamlit_feedback(
-                feedback_type="thumbs",
-                optional_text_label="[Optional] Please provide an explanation",
-                align='center',
-                key="col3_fb",
-                # this ensures that feedback cannot be submitted twice 
-                disable_with_score = disable['col3_fb'],            
-                on_submit = collectFeedback,
-                args = ('col3', 
-                        st.session_state.response_3['output_scenario']
-                        )
-            )   
+            # col3_fb = streamlit_feedback(
+            #     feedback_type="thumbs",
+            #     optional_text_label="[Optional] Please provide an explanation",
+            #     align='center',
+            #     key="col3_fb",
+            #     # this ensures that feedback cannot be submitted twice 
+            #     disable_with_score = disable['col3_fb'],            
+            #     on_submit = collectFeedback,
+            #     args = ('col3', 
+            #             st.session_state.response_3['output_scenario']
+            #             )
+            # )   
 
 
         ## now we should have col1, col2, col3 with text available -- let's set up the infrastructure for selection. 
@@ -549,13 +549,13 @@ def reviewData(testing):
 
 
         ## if we haven't selected scenario, let's give them a choice. 
-        st.chat_message("ai").write("Por favor, revisa los escenarios de arriba. Usa 👍 y 👎 para dejar una calificación y un comentario breve en cada uno de ellos. Luego, elige el que más te guste para continuar.")
+        st.chat_message("ai").write("Por favor, revisa los escenarios de arriba. Luego, elige el que más te guste para continuar.")
      
         b1,b2,b3 = st.columns(3)
         # set up the popover buttons 
-        p1 = b1.popover('Pick scenario 1', use_container_width=True)
-        p2 = b2.popover('Pick scenario 2', use_container_width=True)
-        p3 = b3.popover('Pick scenario 3', use_container_width=True)
+        p1 = b1.popover('Elige un escenario 1', use_container_width=True)
+        p2 = b2.popover('Elige un escenario 2', use_container_width=True)
+        p3 = b3.popover('Elige un escenario 3', use_container_width=True)
 
         # and now initialise them properly
         scenario_selection(p1,'1', st.session_state.response_1['output_scenario']) 
@@ -604,9 +604,9 @@ def finaliseScenario():
 
             st.divider()
             st.markdown("### Adapt yourself ✍️ :")
-            new_scenario = st.text_area("Adapt your story directly", value=package['scenario'], height = 230, label_visibility="hidden")
+            new_scenario = st.text_area("Adapta tu historia directamente.", value=package['scenario'], height = 230, label_visibility="hidden")
             
-            st.button("I'm happy with my edits", 
+            st.button("Estoy contento con mis ediciones.", 
                       on_click=updateFinalScenario,
                       args=(new_scenario,)
                       )
@@ -616,8 +616,8 @@ def finaliseScenario():
         
         with adapt_convo_container:
             st.divider()
-            st.markdown("### Adapt with AI 🦾 :")
-            st.chat_message("ai").write("Okay, what's missing or could change to make this better?")
+            st.markdown("### Adapta con IA. 🦾 :")
+            st.chat_message("ai").write("Bien, ¿qué falta o qué podría cambiarse para mejorar esto?")
         
             # once user enters something 
             if prompt:
@@ -631,25 +631,25 @@ def finaliseScenario():
 
                 # set up a UX feedback in case the scenario takes longer to generate
                 # note -- spinner disappears once the code inside finishes
-                with st.spinner('Working on your updated scenario 🧐'):
+                with st.spinner('Trabajando en tu escenario actualizado. 🧐'):
                     new_response = chain.invoke({
                         'scenario': package['scenario'], 
                         'input': prompt
                         })
                     # st.write(new_response)
 
-                st.markdown(f"Here is the adapted response: \n :orange[{new_response['new_scenario']}]\n\n **what do you think?**")
+                st.markdown(f"Aquí está la respuesta adaptada: \n :orange[{new_response['new_scenario']}]\n\n **¿Qué te parece?**")
 
               
                 c1, c2  = st.columns(2)
 
-                c1.button("All good!", 
+                c1.button("Todo bien!", 
                           on_click=updateFinalScenario,
                           args=(new_response['new_scenario'],))
 
                 # clicking the "keep adapting" button will force streamlit to refresh the page 
                 # --> this loop will run again.  
-                c2.button("Keep adapting")
+                c2.button("Sigue adaptando")
 
 
                 ## TODO -- add an opportunity for people to rewrite the scenario themselves. 
@@ -752,7 +752,7 @@ else:
     consent_message = st.container()
     with consent_message:
         st.markdown(llm_prompts.intro_and_consent)
-        st.button("I accept", key = "consent_button", on_click=markConsent)
+        st.button("He leído, entiendo", key = "consent_button", on_click=markConsent)
            
 
 
