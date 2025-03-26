@@ -603,7 +603,7 @@ def finaliseScenario():
             st.markdown(f"Parece que seleccionaste una historia que te gustó... pero también piensas que :red[{package['judgment']}]. Puedes editarla a continuación o pedirle a la IA que la adapte por ti.")
 
             st.divider()
-            st.markdown("### Adapt yourself ✍️ :")
+            st.markdown("### Adáptate ✍️ :")
             new_scenario = st.text_area("Adapta tu historia directamente.", value=package['scenario'], height = 230, label_visibility="hidden")
             
             st.button("Estoy contento con mis ediciones.", 
