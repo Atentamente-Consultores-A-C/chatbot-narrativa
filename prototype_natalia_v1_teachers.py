@@ -600,7 +600,7 @@ def finaliseScenario():
         original = st.container()
         
         with original:
-            st.markdown(f"Parece que seleccionaste una historia que te gustó... pero también piensas que :red[{package['judgment']}]. Puedes editarla a continuación. Te pido porfavor que tengas en mente que soy un bot que no tiene memoria integrada, por lo que te pido que copies el escenario que sintes que mejor describe tu situacion y hagas cambios sobre el mismo texto para que no se me olvide ningún detalle.")
+            st.markdown(f"Parece que seleccionaste una historia que te gustó... pero también piensas que :red[{package['judgment']}]. Puedes editarla a continuación, usandosela el espacio para escribir. Te pido porfavor que tengas en mente que soy un bot que no tiene memoria integrada, por lo que te pido que copies el escenario que sintes que mejor describe tu situacion y hagas cambios sobre el mismo texto para que no se me olvide ningún detalle.")
 
             st.divider()
             st.markdown("### Aqui puedes editar si lo necesitas ✍️ :")
