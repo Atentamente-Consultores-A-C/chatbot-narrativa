@@ -285,7 +285,7 @@ def summariseData(testing = False):
             st.markdown(":red[DEBUG active -- using testing messages]")
 
         st.divider()
-        st.chat_message("ai").write("¡Parece que tengo todo! Déjame intentar resumir lo que dijiste en tres escenarios. \n ¡Dime si te gusta alguno de estos! ")
+        st.chat_message("ai").write("Parece que tengo la informacion que necesito, gracias por compartir. Déjame intentar resumir lo que dijiste en tres escenarios. \n Dime si alguno de los siguientes escenarios describe bien la situación y cómo te sientes. ")
 
 
         ## can't be bothered to set up LLM stream here, so just showing progress bar for now  
