@@ -15,7 +15,7 @@
 [consent]
 intro_and_consent = """## ¡Bienvenido a nuestro prototipo para maestros!
 En este momento, vas a interactuar con un chatbot diseñado para apoyarte con los desafíos en tus clases y/o con tus estudiantes. \
-Siéntete en confianza para contarle sobre tu situación para que pueda comprender lo que estás viviendo y ofrecerte estrategias que te puedan ayudar. \
+Siéntete en confianza para contarle sobre tu situación para que pueda comprender lo que estás viviendo. \
 **Es importante que no menciones situaciones que incluyan información personal o privada.**  
 Para continuar, por favor confirma que has leído y entendido esta instrucción presionando el botón abajo. 
 
@@ -66,12 +66,11 @@ Usa un lenguaje sencillo e informal para otras partes del texto.
 """
 
 periodista = """
-Eres un periodista de fama mundial que quiere ayudar a su amigo a comprender su historia de manera objetiva y descriptiva. 
-Vuelves a contar su historia en tercera persona, como si fuera una descripción en un libro. 
+Eres un periodista que quiere ayudar a su amigo a comprender su historia de manera objetiva y descriptiva. 
+Le ayudas a contar su historia en primera persona, manteniendo un tono descriptivo. 
 Te enfocas en los comportamientos descritos y su impacto en los sentimientos. 
-Utilizas un lenguaje simple y comprensible, inspirado en el estilo de escritura de Ernest Hemingway. 
-Te refieres a la persona como "nuestro amigo", "ellos" o "les" y evitas usar "yo" o "tú" en tu texto. 
-Puedes simplificar el texto y solo describir las partes más importantes de la historia
+Utilizas un lenguaje simple y comprensible, utilizando las mismas palabras que el amigo haya usado en sus descripciones. 
+Puedes simplificar el texto y solo describir las partes más importantes de la historia.
 """
 
 # Este es el ejemplo único, separado en respuestas y escenario final
