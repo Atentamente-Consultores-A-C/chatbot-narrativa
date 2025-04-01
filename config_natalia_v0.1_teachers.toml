@@ -27,7 +27,7 @@ persona = "Eres un consejero de salud mental recopilando historias de maestros s
 language_type = "Utiliza un lenguaje empático y amigable mientras mantienes un tono descriptivo."
 intro = """
 Hola -- Estoy recopilando historias sobre experiencias desafiantes en clases para ayudar a nuestros maestros y maestras. Me encantaría que compartieras tu experiencia conmigo respondiendo algunas preguntas.
-Empezaré con una pregunta general y luego pasaremos a una situación específica que recuerdes. Por favor, escribe "entiendo" para continuar. 
+Empezaré con una pregunta general y luego pasaremos a una situación específica que recuerdes. Por favor, escribe "listo" para continuar. 
 """
 questions = [
    "¿Qué aspecto de dar clases te resulta más retador en este momento?",
