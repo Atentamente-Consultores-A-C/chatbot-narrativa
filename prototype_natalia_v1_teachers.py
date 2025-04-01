@@ -440,10 +440,10 @@ def scenario_selection (popover, button_num, scenario):
         c1, c2 = st.columns(2)
         
         ## the accept button should be disabled if no rating has been provided yet
-        c1.button("Continuar con este escenario 🎉", key = f'yeskey_{button_num}', on_click = click_selection_yes, args = (button_num, scenario), disabled = st.session_state['scenario_judged'])
+        c1.button("Quiero continuar con este escenario", key = f'yeskey_{button_num}', on_click = click_selection_yes, args = (button_num, scenario), disabled = st.session_state['scenario_judged'])
 
         ## the second one needs to be accessible all the time!  
-        c2.button("En realidad, déjame probar con otro 🤨", key = f'nokey_{button_num}', on_click= click_selection_no)
+        c2.button("Prefiero probar con otro escenario", key = f'nokey_{button_num}', on_click= click_selection_no)
 
 
 
@@ -589,8 +589,8 @@ def finaliseScenario():
 
     # if scenario is judged as 'ready' by the user -- we're done
     if package['judgment'] == "Ready as is!":
-        st.markdown(":tada: ¡Yay! :tada:")
-        st.markdown("¡Has completado la interacción y, con suerte, encontrado un escenario que te haya gustado!")
+        st.markdown("Listo")
+        st.markdown("Este escenario debe de describir con presición tu situacion y cómo te sientes. Te agradezco la apertura de compartir tu experiencia conmigo.")
         st.markdown(f":green[{package['scenario']}]")
     
     
