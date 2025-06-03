@@ -94,17 +94,14 @@ conversation = ConversationChain(prompt=prompt_updated, llm=chat, verbose=True, 
 if st.session_state['consent']:
     entry_messages = st.expander("Collecting your story", expanded=st.session_state['exp_data'])
 
-    # Inicializar con mensaje de bienvenida si no hay mensajes
     if not msgs.messages:
         msgs.add_ai_message(llm_prompts.questions_intro)
 
-    # Mostrar todos los mensajes anteriores en orden
     with entry_messages:
         for m in msgs.messages:
             with st.chat_message(m.type):
                 st.markdown(f"<span style='color:black'>{m.content}</span>", unsafe_allow_html=True)
 
-    # Paso intermedio: elegir narrativa preferida
     if st.session_state.agentState == "select_micronarrative":
         st.subheader("Elige la narrativa que más se parece a tu experiencia")
         st.markdown("Selecciona una de las siguientes opciones para continuar:")
@@ -125,7 +122,6 @@ if st.session_state['consent']:
                 st.success("Narrativa seleccionada.")
                 st.rerun()
 
-
     else:
         prompt = st.chat_input()
 
@@ -143,22 +139,30 @@ if st.session_state['consent']:
                 else:
                     response = conversation.invoke(input=prompt)
                     if "FINISHED" in response['response']:
-                        refinement_prompt = PromptTemplate(
-                            input_variables=["text"],
-                            template="""
-Toma el siguiente texto y reescríbelo de forma clara, directa y estructurada para que la persona pueda ver reflejada su propia experiencia. 
-La finalidad de esta sección es despertar dentro de la persona una introspección sobre su situación y el cómo es que la maneja.
-La micronarrativa debe estar basada en los inputs de la persona, siendo objetiva y concisa, con una postura neutra.
-Haz este párrafo tener una longitud mínima de 3 oraciones y máxima de un párrafo.
+                        from langchain.output_parsers.json import SimpleJsonOutputParser
+                        from langchain_core.prompts import PromptTemplate
 
-{text}
-"""
-                        )
-                        refined_chain = refinement_prompt | chat
+                        cleaned_text = response['response'].replace("FINISHED", "<span style='color:#f8f4ec'>FINISHED</span>").strip()
+
+                        extraction_prompt = PromptTemplate(input_variables=["conversation_history"], template=llm_prompts.extraction_prompt_template)
+                        extraction_chain = extraction_prompt | chat | SimpleJsonOutputParser()
+                        answer_set = extraction_chain.invoke({"conversation_history": msgs})
+
+                        summary_prompt = PromptTemplate.from_template(llm_prompts.main_prompt_template)
+                        summary_chain = summary_prompt | chat | SimpleJsonOutputParser()
+                        summary_answers = {key: answer_set[key] for key in llm_prompts.summary_keys}
+
+                        personas = llm_prompts.personas
                         micronarrativas = []
-                        for _ in range(3):
-                            micronarrativa = refined_chain.invoke({"text": response['response']}).content
-                            micronarrativas.append(micronarrativa)
+
+                        for persona in personas:
+                            result = summary_chain.invoke({
+                                "persona": persona,
+                                "one_shot": llm_prompts.one_shot,
+                                "end_prompt": llm_prompts.extraction_task,
+                                **summary_answers
+                            })
+                            micronarrativas.append(result["output_scenario"])
 
                         st.session_state.agentState = "select_micronarrative"
                         st.session_state.micronarrativas = micronarrativas
@@ -166,7 +170,6 @@ Haz este párrafo tener una longitud mínima de 3 oraciones y máxima de un pár
                     else:
                         st.chat_message("ai").markdown(f"<span style='color:black'>{response['response']}</span>", unsafe_allow_html=True)
 
-    # Mostrar narrativa seleccionada y editable
     if st.session_state.agentState == "summarise" and st.session_state.final_response:
         st.subheader("Tu historia en tus propias palabras")
         st.markdown("Aquí tienes la versión final de tu narrativa. Si quieres mejorarla o adaptarla, puedes hacerlo a continuación:")

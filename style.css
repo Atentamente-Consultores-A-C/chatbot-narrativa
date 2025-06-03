@@ -90,6 +90,11 @@ button[kind="primary"] {
     max-width: 70%;
 }
 
+/* === FUERZA COLOR NEGRO EN EL CONTENIDO DE LOS MENSAJES DEL BOT === */
+.stChatMessage.ai .element-container * {
+    color: black !important;
+}
+
 /* === MENSAJES DESTACADOS OPCIONALES === */
 .stChatMessage.special .element-container {
     background-color: #0C2340 !important;
