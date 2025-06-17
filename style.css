@@ -19,7 +19,7 @@ div[class^="st-emotion-cache"][class*="en45"] {
 
 /* === CAJA DE TEXTO DEL USUARIO === */
 input[type="text"] {
-    background-color: #f8f4ec !important;  /* tono crema */
+    background-color: #f8f4ec !important;
     color: black !important;
     border-radius: 50px !important;
     padding: 0.75rem 1.2rem !important;
@@ -59,6 +59,11 @@ button[kind="primary"] {
     max-width: 90%;
     margin-bottom: 0.75rem;
     display: flex;
+    color: black !important; /* Aplica por defecto */
+}
+
+[data-testid="stChatMessage"] * {
+    color: black !important; /* Forza texto negro en elementos hijos */
 }
 
 /* === MENSAJES DEL USUARIO A LA DERECHA === */
@@ -68,7 +73,6 @@ button[kind="primary"] {
 
 .stChatMessage.human .element-container {
     background-color: #FBB03B !important;
-    color: black !important;
     padding: 1rem;
     border-radius: 16px;
     text-align: left;
@@ -83,22 +87,15 @@ button[kind="primary"] {
 
 .stChatMessage.ai .element-container {
     background-color: #084bd1 !important;
-    color: white !important;
     padding: 1rem;
     border-radius: 16px;
     text-align: left;
     max-width: 70%;
 }
 
-/* === FUERZA COLOR NEGRO EN EL CONTENIDO DE LOS MENSAJES DEL BOT === */
-.stChatMessage.ai .element-container * {
-    color: black !important;
-}
-
 /* === MENSAJES DESTACADOS OPCIONALES === */
 .stChatMessage.special .element-container {
     background-color: #0C2340 !important;
-    color: white !important;
 }
 
 /* === BOTÓN DE CONSENTIMIENTO NARANJA CON TEXTO BLANCO === */
