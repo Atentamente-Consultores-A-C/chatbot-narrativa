@@ -5,3 +5,5 @@ langchain_core
 langsmith
 streamlit_feedback
 streamlit
+gspread
+oauth2client
