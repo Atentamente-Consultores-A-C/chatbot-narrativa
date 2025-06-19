@@ -20,12 +20,25 @@ import streamlit.components.v1 as components
 from functools import partial
 from llm_config_espanol import LLMConfig
 
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
+
 # === Load environment variables from Streamlit secrets ===
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 os.environ["LANGCHAIN_API_KEY"] = st.secrets["LANGCHAIN_API_KEY"]
 os.environ["LANGCHAIN_PROJECT"] = st.secrets["LANGCHAIN_PROJECT"]
 os.environ["LANGCHAIN_TRACING_V2"] = st.secrets["LANGCHAIN_TRACING_V2"]
 os.environ["LANGSMITH_ENDPOINT"] = st.secrets["LANGCHAIN_ENDPOINT"]
+
+# === Configurar conexión con Google Sheets ===
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive"
+]
+creds = ServiceAccountCredentials.from_json_keyfile_name("service_account.json", scope)
+gs_client = gspread.authorize(creds)
+sheet = gs_client.open("micronarrativas_atentamenteBot").sheet1
 
 # === Load Custom CSS ===
 def load_custom_css(path="style.css"):
@@ -90,17 +103,9 @@ chat = ChatOpenAI(temperature=0.3, model=st.session_state.llm_model, openai_api_
 prompt_updated = PromptTemplate(input_variables=["history", "input"], template=prompt_datacollection)
 conversation = ConversationChain(prompt=prompt_updated, llm=chat, verbose=True, memory=memory)
 
-# === Helper function to extract user responses into structured format ===
-def extractChoices():
-    extraction_llm = ChatOpenAI(temperature=0.1, model=st.session_state.llm_model, openai_api_key=openai_api_key)
-    extraction_template = PromptTemplate(input_variables=["conversation_history"], template=llm_prompts.extraction_prompt_template)
-    json_parser = SimpleJsonOutputParser()
-    extraction_chain = extraction_template | extraction_llm | json_parser
-    return extraction_chain.invoke({"conversation_history": msgs})
-
 # === UI and Conversation flow ===
 if st.session_state['consent']:
-    entry_messages = st.expander("Collecting your story", expanded=st.session_state['exp_data'])
+    entry_messages = st.expander("🗣️ Conversación", expanded=st.session_state['exp_data'])
 
     if not msgs.messages:
         msgs.add_ai_message(llm_prompts.questions_intro)
@@ -108,45 +113,90 @@ if st.session_state['consent']:
     with entry_messages:
         for m in msgs.messages:
             with st.chat_message(m.type):
-                st.write(m.content)
+                st.markdown(f"<span style='color:black'>{m.content}</span>", unsafe_allow_html=True)
 
     if st.session_state.agentState == "select_micronarrative":
-        st.subheader("Elige la narrativa que más se parece a tu experiencia")
+        st.subheader("✨ Elige la narrativa que más se parece a tu experiencia")
         st.markdown("Selecciona una de las siguientes opciones para continuar:")
 
-        for idx, texto in enumerate(st.session_state.micronarrativas):
-            with st.container():
-                st.text_area(
-                    label=f"✍️ Opción {idx + 1}",
-                    value=texto,
-                    height=180,
-                    key=f"narrativa_{idx}",
-                    disabled=True,
-                    label_visibility="collapsed"
-                )
-                if st.button("✅ Elegir versión", key=f"elegir_{idx}"):
-                    st.session_state.final_response = texto
-                    st.session_state.agentState = "summarise"
-                    st.success("Narrativa seleccionada.")
-                    st.rerun()
+    for idx, texto in enumerate(st.session_state.micronarrativas):
+        with st.container():
+            st.text_area(
+                label=f"✍️ Opción {idx + 1}",
+                value=texto,
+                height=180,
+                key=f"narrativa_{idx}",
+                disabled=True,
+                label_visibility="collapsed"
+            )
+            if st.button("✅ Elegir versión", key=f"elegir_{idx}"):
+                st.session_state.final_response = texto
+                st.session_state.agentState = "summarise"
+                st.success("Narrativa seleccionada.")
+                st.rerun()
+
+    else:
+        prompt = st.chat_input()
+
+        if prompt:
+            with entry_messages:
+                st.chat_message("human").markdown(f"<span style='color:black'>{prompt}</span>", unsafe_allow_html=True)
+
+                if st.session_state['waiting_for_listo']:
+                    if prompt.strip().lower() == "listo":
+                        st.session_state['waiting_for_listo'] = False
+                        response = conversation.invoke(input=prompt)
+                        st.chat_message("ai").markdown(f"<span style='color:black'>{response['response']}</span>", unsafe_allow_html=True)
+                    else:
+                        st.warning("🔒 Para comenzar, por favor escribe la palabra **\"listo\"**.")
+                else:
+                    response = conversation.invoke(input=prompt)
+                    if "FINISHED" in response['response']:
+                        refinement_prompt = PromptTemplate(
+                            input_variables=["text"],
+                            template="""
+Toma el siguiente texto y reescríbelo de forma clara, directa y estructurada para que la persona pueda ver reflejada su propia experiencia. 
+La finalidad de esta sección es despertar dentro de la persona una introspección sobre su situación y el cómo es que la maneja.
+La micronarrativa debe estar basada en los inputs de la persona, siendo objetiva y concisa, con una postura neutra.
+Haz este párrafo tener una longitud mínima de 3 oraciones y máxima de un párrafo.
+
+{text}
+"""
+                        )
+                        refined_chain = refinement_prompt | chat
+                        micronarrativas = []
+                        for _ in range(3):
+                            micronarrativa = refined_chain.invoke({"text": response['response']}).content
+                            micronarrativas.append(micronarrativa)
+
+                        st.session_state.agentState = "select_micronarrative"
+                        st.session_state.micronarrativas = micronarrativas
+                        st.rerun()
+                    else:
+                        st.chat_message("ai").markdown(f"<span style='color:black'>{response['response']}</span>", unsafe_allow_html=True)
 
     if st.session_state.agentState == "summarise" and st.session_state.final_response:
-        st.subheader("Tu historia en tus propias palabras")
+        st.subheader("📤 Tu historia en tus propias palabras")
         st.markdown("Aquí tienes la versión final de tu narrativa. Si quieres mejorarla o adaptarla, puedes hacerlo a continuación:")
 
         new_text = st.text_area("✍️ Edita tu micronarrativa si lo deseas", value=st.session_state.final_response, height=250, label_visibility="visible")
 
         if st.button("✅ Guardar versión final"):
-            st.success("Tu narrativa ha sido actualizada.")
+            st.success("Tu narrativa ha sido guardada, gracias por participar.")
             st.session_state.final_response = new_text
+
+            try:
+                sheet.append_row([new_text, datetime.now().isoformat()])
+            except Exception as e:
+                st.error(f"❌ Error al guardar en Google Sheets: {e}")
 
         with st.container():
             st.markdown("### ✨ ¿Quieres mejorar tu narrativa con ayuda de la IA?")
-            with st.expander("🔧 Haz clic aquí para adaptar tu texto con la IA", expanded=True):
-                st.chat_message("ai").write("¿Qué podríamos mejorar o cambiar en tu narrativa?")
+            with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la IA", expanded=True):
+                st.chat_message("ai").markdown(f"<span style='color:black'>¿Qué podríamos mejorar o cambiar en tu narrativa?</span>", unsafe_allow_html=True)
                 adaptation_input = st.chat_input("Escribe cómo quieres mejorarla...")
                 if adaptation_input:
-                    st.chat_message("human").write(adaptation_input)
+                    st.chat_message("human").markdown(f"<span style='color:black'>{adaptation_input}</span>", unsafe_allow_html=True)
                     adaptation_prompt = PromptTemplate(input_variables=["input", "scenario"], template=llm_prompts.extraction_adaptation_prompt_template)
                     json_parser = SimpleJsonOutputParser()
                     chain = adaptation_prompt | chat | json_parser
@@ -158,7 +208,7 @@ if st.session_state['consent']:
                         st.success("Narrativa actualizada con la sugerencia de IA.")
 
             st.markdown("---")
-            st.markdown("### 📝 Por favor, ¿nos ayudas a responder esta encuesta para poder mejorar el chatbot?")
+            st.markdown("### 📝 ¿Nos ayudas con tu opinión?")
             st.markdown(
                 """
                 <a href="https://forms.gle/pxBtvu8WPRAort7b7" target="_blank">
@@ -169,49 +219,6 @@ if st.session_state['consent']:
                 """,
                 unsafe_allow_html=True
             )
-
-    # === Input always at bottom ===
-    prompt = st.chat_input("Escribe tu mensaje aquí")
-
-    if prompt:
-        st.chat_message("human").write(prompt)
-
-        if st.session_state['waiting_for_listo']:
-            if prompt.strip().lower() == "listo":
-                st.session_state['waiting_for_listo'] = False
-                response = conversation.invoke(input=prompt)
-                st.chat_message("ai").write(response['response'])
-            else:
-                st.warning("🔒 Para comenzar, por favor escribe la palabra **\"listo\"**.")
-        else:
-            response = conversation.invoke(input=prompt)
-            if "FINISHED" in response['response']:
-                cleaned_response = response['response'].replace(
-                    "FINISHED", '<span style="color:#c9c9c9;">FINISHED</span>'
-                )
-                st.chat_message("ai").write(cleaned_response, unsafe_allow_html=True)
-
-                extracted = extractChoices()
-                template = PromptTemplate.from_template(llm_prompts.main_prompt_template)
-                parser = SimpleJsonOutputParser()
-                chain = template | chat | parser
-
-                micronarrativas = []
-                for persona in llm_prompts.personas:
-                    narrativa = chain.invoke({
-                        "persona": persona,
-                        "one_shot": llm_prompts.one_shot,
-                        "end_prompt": llm_prompts.extraction_task,
-                        **extracted
-                    })["output_scenario"]
-                    micronarrativas.append(narrativa)
-
-                st.session_state.agentState = "select_micronarrative"
-                st.session_state.micronarrativas = micronarrativas
-                st.rerun()
-            else:
-                st.chat_message("ai").write(response['response'])
-
 else:
     consent_message = st.container()
     with consent_message:

@@ -19,3 +19,6 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+#Google API
+service_account.json
