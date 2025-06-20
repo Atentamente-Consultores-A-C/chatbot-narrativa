@@ -26,11 +26,24 @@ os.environ["LANGCHAIN_PROJECT"] = st.secrets["LANGCHAIN_PROJECT"]
 os.environ["LANGCHAIN_TRACING_V2"] = st.secrets["LANGCHAIN_TRACING_V2"]
 os.environ["LANGSMITH_ENDPOINT"] = st.secrets["LANGCHAIN_ENDPOINT"]
 
-# === Configurar conexión con Google Sheets ===
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("service_account.json", scope)
-gs_client = gspread.authorize(creds)
-sheet = gs_client.open("micronarrativas_atentamenteBot").sheet1
+# Leer credenciales desde los secretos
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive"
+]
+credentials = ServiceAccountCredentials.from_json_keyfile_dict(
+    st.secrets["gcp_service_account"], scope
+)
+
+# Autorizar cliente de Google Sheets
+gs_client = gspread.authorize(credentials)
+
+# Abrir la hoja de cálculo
+try:
+    sheet = gs_client.open("micronarrativas_atentamenteBot").sheet1
+except Exception as e:
+    st.error(f"❌ No se pudo abrir la hoja de cálculo: {e}")
+    st.stop()
 
 # === Load Custom CSS ===
 def load_custom_css(path="style.css"):
