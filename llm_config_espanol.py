@@ -46,7 +46,7 @@ class LLMConfig:
             questions_prompt += f"\n\nUna vez que hayas recopilado las respuestas a las {n_questions} preguntas"
 
         questions_prompt += (
-            ', detén la conversación y escribe una sola palabra "FINISHED".\n\n'
+            ', detén la conversación y escribe una sola palabra "Gracias!".\n\n'
             "Conversación actual:\n{history}\nHuman: {input}\nAI:"
         )
 

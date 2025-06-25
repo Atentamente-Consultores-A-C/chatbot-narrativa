@@ -132,7 +132,7 @@ with entry_messages:
 # === SHOW OPTIONS TO SELECT ===
 if st.session_state.agentState == "select_micronarrative":
     st.subheader("✨ Elige la narrativa que más se parece a tu experiencia")
-    st.markdown("Selecciona una de las siguientes opciones para continuar:")
+    st.markdown("A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar.")
 
     # Scroll automático cuando se muestran las micronarrativas
     st.components.v1.html("""
@@ -177,7 +177,7 @@ else:
                     st.warning("🔒 Para comenzar, por favor escribe la palabra **\"listo\"**.")
             else:
                 response = conversation.invoke(input=prompt)
-                if "FINISHED" in response['response']:
+                if "Gracias!" in response['response']:
                     summary_prompt = PromptTemplate.from_template(llm_prompts.main_prompt_template)
                     parser = SimpleJsonOutputParser()
                     chain = summary_prompt | chat | parser
@@ -201,7 +201,7 @@ else:
 # === FINAL REVIEW + GUARDAR ===
 if st.session_state.agentState == "summarise" and st.session_state.final_response:
     st.subheader("📄 Tu historia en tus propias palabras")
-    st.markdown("Aquí tienes la versión final de tu narrativa. Si quieres mejorarla o adaptarla, puedes hacerlo a continuación:")
+    st.markdown("Gracias por compartir esto, nos ayuda a entender las problematicas que enfrentan los educadores, esperamos que este ejercicio te haya ayudado a ver el problema con mayor claridad. Si quieres puedes copiar esta narrativa para ti mismo.")
     new_text = st.text_area("✍️ Edita tu micronarrativa si lo deseas", value=st.session_state.final_response, height=250)
 
     if st.button("✅ Guardar versión final"):
@@ -231,16 +231,3 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
                 if st.button("✅ Usar versión sugerida"):
                     st.session_state.final_response = improved['new_scenario']
                     st.success("Narrativa actualizada con la sugerencia de IA.")
-
-    st.markdown("---")
-    st.markdown("### 📝 ¿Nos ayudas con tu opinión?")
-    st.markdown(
-        """
-        <a href="https://forms.gle/pxBtvu8WPRAort7b7" target="_blank">
-            <button style="background-color:#ec6041; color:white; padding:0.75rem 1.5rem; border:none; border-radius:12px; font-size:16px; cursor:pointer;">
-                Ir a encuesta de retroalimentación
-            </button>
-        </a>
-        """,
-        unsafe_allow_html=True
-    )
