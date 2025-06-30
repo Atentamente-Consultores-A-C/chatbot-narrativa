@@ -163,71 +163,72 @@ if st.session_state.agentState == "select_micronarrative":
 
 # === CONVERSATION ENTRY ===
 else:
-    prompt = st.chat_input()
-    if prompt:
-        with entry_messages:
-            st.chat_message("human").markdown(f"<span style='color:black'>{prompt}</span>", unsafe_allow_html=True)
+    if st.session_state.agentState != "summarise" or not st.session_state.final_response:
+        prompt = st.chat_input()
+        if prompt:
+            with entry_messages:
+                st.chat_message("human").markdown(f"<span style='color:black'>{prompt}</span>", unsafe_allow_html=True)
 
-            if st.session_state['waiting_for_listo']:
-                if prompt.strip().lower() == "listo":
-                    st.session_state['waiting_for_listo'] = False
+                if st.session_state['waiting_for_listo']:
+                    if prompt.strip().lower() == "listo":
+                        st.session_state['waiting_for_listo'] = False
+                        response = conversation.invoke(input=prompt)
+                        st.chat_message("ai").markdown(f"<span style='color:black'>{response['response']}</span>", unsafe_allow_html=True)
+                    else:
+                        st.warning("🔒 Para comenzar, por favor escribe la palabra **\"listo\"**.")
+                else:
                     response = conversation.invoke(input=prompt)
-                    st.chat_message("ai").markdown(f"<span style='color:black'>{response['response']}</span>", unsafe_allow_html=True)
-                else:
-                    st.warning("🔒 Para comenzar, por favor escribe la palabra **\"listo\"**.")
-            else:
-                response = conversation.invoke(input=prompt)
-                if "Gracias!" in response['response']:
-                    summary_prompt = PromptTemplate.from_template(llm_prompts.main_prompt_template)
-                    parser = SimpleJsonOutputParser()
-                    chain = summary_prompt | chat | parser
-                    full_history = "\n".join([f"{m.type.upper()}: {m.content}" for m in msgs.messages])
-                    summary_input = {key: full_history for key in llm_prompts.summary_keys}
-                    micronarrativas = []
-                    for persona in llm_prompts.personas:
-                        result = chain.invoke({
-                            "persona": persona,
-                            "one_shot": llm_prompts.one_shot,
-                            "end_prompt": llm_prompts.extraction_task,
-                            **summary_input
-                        })
-                        micronarrativas.append(result['output_scenario'])
-                    st.session_state.micronarrativas = micronarrativas
-                    st.session_state.agentState = "select_micronarrative"
-                    st.rerun()
-                else:
-                    st.chat_message("ai").markdown(f"<span style='color:black'>{response['response']}</span>", unsafe_allow_html=True)
+                    if "Gracias!" in response['response']:
+                        summary_prompt = PromptTemplate.from_template(llm_prompts.main_prompt_template)
+                        parser = SimpleJsonOutputParser()
+                        chain = summary_prompt | chat | parser
+                        full_history = "\n".join([f"{m.type.upper()}: {m.content}" for m in msgs.messages])
+                        summary_input = {key: full_history for key in llm_prompts.summary_keys}
+                        micronarrativas = []
+                        for persona in llm_prompts.personas:
+                            result = chain.invoke({
+                                "persona": persona,
+                                "one_shot": llm_prompts.one_shot,
+                                "end_prompt": llm_prompts.extraction_task,
+                                **summary_input
+                            })
+                            micronarrativas.append(result['output_scenario'])
+                        st.session_state.micronarrativas = micronarrativas
+                        st.session_state.agentState = "select_micronarrative"
+                        st.rerun()
+                    else:
+                        st.chat_message("ai").markdown(f"<span style='color:black'>{response['response']}</span>", unsafe_allow_html=True)
 
-# === FINAL REVIEW + GUARDAR ===
-if st.session_state.agentState == "summarise" and st.session_state.final_response:
-    st.subheader("📄 Tu historia en tus propias palabras")
-    st.markdown("Gracias por compartir esto, nos ayuda a entender las problematicas que enfrentan los educadores, esperamos que este ejercicio te haya ayudado a ver el problema con mayor claridad. Si quieres puedes copiar esta narrativa para ti mismo.")
-    new_text = st.text_area("✍️ Edita tu micronarrativa si lo deseas", value=st.session_state.final_response, height=250)
+    # === FINAL REVIEW + GUARDAR ===
+    if st.session_state.agentState == "summarise" and st.session_state.final_response:
+        st.subheader("📄 Tu historia en tus propias palabras")
+        st.markdown("Gracias por compartir esto, nos ayuda a entender las problematicas que enfrentan los educadores, esperamos que este ejercicio te haya ayudado a ver el problema con mayor claridad. Si quieres puedes copiar esta narrativa para ti mismo.")
+        new_text = st.text_area("✍️ Edita tu micronarrativa si lo deseas", value=st.session_state.final_response, height=250)
 
-    if st.button("✅ Guardar versión final"):
-        st.session_state.final_response = new_text
-        try:
-            sheet.append_row([new_text, datetime.now().isoformat()])
-        except Exception as e:
-            st.error(f"❌ Error al guardar en Google Sheets: {e}")
-        st.session_state.vista_final = True
-        st.rerun()
-
-    with st.container():
-        st.markdown("### ✨ ¿Quieres mejorar tu narrativa con ayuda de la IA?")
-        with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la IA", expanded=True):
-            st.chat_message("ai").markdown("¿Qué podríamos mejorar o cambiar en tu narrativa?")
-            adaptation_input = st.chat_input("Escribe cómo quieres mejorarla...")
-            if adaptation_input:
-                st.chat_message("human").markdown(adaptation_input)
-                adaptation_prompt = PromptTemplate(
-                    input_variables=["input", "scenario"],
-                    template=llm_prompts.extraction_adaptation_prompt_template
-                )
-                chain = adaptation_prompt | chat | parser
-                with st.spinner('Generando versión mejorada...'):
-                    improved = chain.invoke({"scenario": st.session_state.final_response, "input": adaptation_input})
-                st.markdown(f"Versión adaptada sugerida:\n\n {improved['new_scenario']}")
-                if st.button("✅ Usar versión sugerida"):
-                    st.session_state.final_response = improved['new_scenario']
-                    st.success("Narrativa actualizada con la sugerencia de IA.")
+        if st.button("✅ Guardar versión final"):
+            st.session_state.final_response = new_text
+            try:
+                sheet.append_row([new_text, datetime.now().isoformat()])
+            except Exception as e:
+                st.error(f"❌ Error al guardar en Google Sheets: {e}")
+            st.session_state.vista_final = True
+            st.rerun()
+        
+        with st.container():
+            st.markdown("### ✨ ¿Quieres mejorar tu narrativa con ayuda de la IA?")
+            with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la IA", expanded=True):
+                st.chat_message("ai").markdown("¿Qué podríamos mejorar o cambiar en tu narrativa?")
+                adaptation_input = st.chat_input("Escribe cómo quieres mejorarla...")
+                if adaptation_input:
+                    st.chat_message("human").markdown(adaptation_input)
+                    adaptation_prompt = PromptTemplate(
+                        input_variables=["input", "scenario"],
+                        template=llm_prompts.extraction_adaptation_prompt_template
+                    )
+                    chain = adaptation_prompt | chat | parser
+                    with st.spinner('Generando versión mejorada...'):
+                        improved = chain.invoke({"scenario": st.session_state.final_response, "input": adaptation_input})
+                    st.markdown(f"Versión adaptada sugerida:\n\n {improved['new_scenario']}")
+                    if st.button("✅ Usar versión sugerida"):
+                        st.session_state.final_response = improved['new_scenario']
+                        st.success("Narrativa actualizada con la sugerencia de IA.")
