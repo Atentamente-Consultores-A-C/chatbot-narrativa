@@ -213,5 +213,3 @@ else:
                 st.error(f"❌ Error al guardar en Google Sheets: {e}")
             st.session_state.vista_final = True
             st.rerun()
-        
-       
