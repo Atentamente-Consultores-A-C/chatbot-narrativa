@@ -214,21 +214,4 @@ else:
             st.session_state.vista_final = True
             st.rerun()
         
-        with st.container():
-            st.markdown("### ✨ ¿Quieres mejorar tu narrativa con ayuda de la IA?")
-            with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la IA", expanded=True):
-                st.chat_message("ai").markdown("¿Qué podríamos mejorar o cambiar en tu narrativa?")
-                adaptation_input = st.chat_input("Escribe cómo quieres mejorarla...")
-                if adaptation_input:
-                    st.chat_message("human").markdown(adaptation_input)
-                    adaptation_prompt = PromptTemplate(
-                        input_variables=["input", "scenario"],
-                        template=llm_prompts.extraction_adaptation_prompt_template
-                    )
-                    chain = adaptation_prompt | chat | parser
-                    with st.spinner('Generando versión mejorada...'):
-                        improved = chain.invoke({"scenario": st.session_state.final_response, "input": adaptation_input})
-                    st.markdown(f"Versión adaptada sugerida:\n\n {improved['new_scenario']}")
-                    if st.button("✅ Usar versión sugerida"):
-                        st.session_state.final_response = improved['new_scenario']
-                        st.success("Narrativa actualizada con la sugerencia de IA.")
+       

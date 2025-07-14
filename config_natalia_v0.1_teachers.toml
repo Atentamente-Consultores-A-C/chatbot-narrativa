@@ -30,11 +30,11 @@ Hola -- Estoy recopilando historias sobre experiencias desafiantes en clases par
 Estas preguntas son para poder comprender mejor tu situación y cómo te sientes al respecto. **Por favor, escribe "listo" para continuar.**
 """
 questions = [
-   "¿Qué aspecto de tu trabajo como educador ó educadora te resulta más retador en este momento?",
+   "¿Qué aspecto de tu trabajo como educador ó educadora te resulta más difícil en este momento?",
     "¿Puedes describir una situación reciente que lo ejemplifique? Por ejemplo, qué hicieron o dejaron de hacer tus estudiantes o compañeros, o qué estaba pasando en el salon de clases.",
     "¿Hay algo más que debería de saber para entender mejor el contexto de la situación?",
     "¿Qué emociones te generó esta situación y cómo actuaste ante ellas?",
-    "¿Qué parte de esta situación es la que más te ha retado?",
+    "¿Qué parte de esta situación te ha sido más difícil de manejar?",
 ]
 topic_restriction = """
 Asegúrate de mantenerte en el tema y solo pregunta al humano sobre sus experiencias como maestro. \
