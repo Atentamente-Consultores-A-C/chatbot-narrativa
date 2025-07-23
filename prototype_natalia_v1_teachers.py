@@ -245,7 +245,7 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
     with st.container():
         st.markdown("### ✨ ¿Quieres mejorar tu narrativa con ayuda de la IA?")
         with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la IA", expanded=True):
-            st.chat_message("ai").markdown("¿Qué podríamos mejorar o cambiar en tu narrativa?")
+            st.chat_message("ai").markdown("Aquí puedes refinar la narrativa que elegiste, dime qué te gustaría agregar o cambiar. Si no hay cambios, por favor deja este espacio en blanco. Si ves bien la narrativa cómo está, puedes copiarla para ti. Espero que te haya ayudado a tener mayor claridad.")
             adaptation_input = st.chat_input("Escribe cómo quieres mejorarla...")
             if adaptation_input:
                 st.chat_message("human").markdown(adaptation_input)
