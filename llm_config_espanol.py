@@ -9,7 +9,7 @@ class LLMConfig:
 
         self.intro_and_consent = config["consent"]["intro_and_consent"].strip()
 
-        self.questions_intro = config["collection"]["intro"].strip() 
+        self.questions_intro = config["collection"]["intro"].strip()
         self.questions_prompt_template = self.generate_questions_prompt_template(config["collection"])
         self.questions_outro = "Gracias por compartir tu situación conmigo. Creo que tengo toda la información que necesito para apoyarte, pero déjame verificarlo."
 
@@ -26,13 +26,20 @@ class LLMConfig:
 
     def generate_questions_prompt_template(self, data_collection):
 
-        questions_prompt = f"{data_collection['persona']}\n\nTu objetivo es recopilar respuestas estructuradas para las siguientes preguntas:\n\n"
+        questions_prompt = (
+            f"{data_collection['persona']}\n\n"
+            "Tu objetivo es recopilar respuestas estructuradas para las siguientes preguntas, formulando cada una de ellas con un preámbulo cálido y empático según las respuestas anteriores:\n\n"
+        )
 
         for count, question in enumerate(data_collection["questions"]):
-            questions_prompt += f"{count+1}. {question}\n"
+            if count == 1:  # segunda pregunta con ejemplo dinámico
+                questions_prompt += f"{count+1}. {question}{{dynamic_example}}\n"
+            else:
+                questions_prompt += f"{count+1}. {question}\n"
 
         questions_prompt += (
-            f"\nHaz cada pregunta de una en una. {data_collection['language_type']} "
+            "\nHaz cada pregunta de una en una. "
+            f"{data_collection['language_type']} "
             "Asegúrate de obtener al menos una respuesta básica para cada pregunta antes de pasar a la siguiente. "
             "Nunca respondas por la persona. "
             "Si no estás seguro de lo que la persona quiso decir, vuelve a preguntar. "
@@ -68,7 +75,7 @@ class LLMConfig:
             "Usa solamente las palabras y frases que contiene el texto. "
             "Si no conoces el valor de un atributo que se te pide extraer, devuelve null para el valor de ese atributo.\n\n"
             f"Vas a producir un JSON con las siguientes claves: {keys_string}.\n\n"
-            f"Estas corresponden a la(s) siguiente(s) pregunta(s):\n"
+            "Estas corresponden a la(s) siguiente(s) pregunta(s):\n"
         )
 
         for count, question in enumerate(summaries["questions"].values()):

@@ -12,37 +12,41 @@
 #
 # Nota que deben proporcionarse tres personajes en la sección "personas". No se usarán personajes adicionales.
 # Este es el texto que se mostrará en la primera página
+
 [consent]
 intro_and_consent = """## ¡Bienvenido/a a nuestro prototipo para maestros y maestras!
 Ahora vas a interactuar con un chatbot diseñado para recopilar historias de las dificultades que has enfrentado en tus clases y/o con tus estudiantes. \
 Siéntete en confianza para contarle sobre tu situación para que pueda comprender lo que estás viviendo. \
 **Es importante que no menciones información personal o privada, como tu nombre completo, dirección, etc.**  
 Para continuar, por favor presiona el botón abajo. 
-
 """
+
 ###  Esta sección configura el bot de recopilación de datos. ###
 # Puedes incluir tantas preguntas como desees
 [collection]
 persona = "Eres un consejero de salud mental recopilando historias de maestros sobre sus desafíos al impartir clases o relacionarse con sus estudiantes."
-language_type = "Utiliza un lenguaje empático y amigable mientras mantienes un tono descriptivo."
+language_type = """
+Utiliza un lenguaje empático y amigable en tus comentarios generales, pero mantén las respuestas y comentarios previos a las preguntas breves (máximo dos oraciones). Formula las preguntas exactamente como están escritas aquí, incluyendo cualquier ejemplo que contengan.
+"""
 intro = """
 Hola -- Estoy recopilando historias sobre experiencias desafiantes en clases para ayudar a nuestros maestros y maestras. Me encantaría que compartieras tu experiencia conmigo respondiendo algunas preguntas.
 Estas preguntas son para poder comprender mejor tu situación y cómo te sientes al respecto. **Por favor, escribe "listo" para continuar.**
 """
 questions = [
    "¿Qué aspecto de tu trabajo como educador ó educadora te resulta más difícil en este momento?",
-    "¿Puedes describir una situación reciente que lo ejemplifique? Por ejemplo, qué hicieron o dejaron de hacer tus estudiantes o compañeros, o qué estaba pasando en el salon de clases.",
-    "¿Hay algo más que debería de saber para entender mejor el contexto de la situación?",
-    "¿Qué emociones te generó esta situación y cómo actuaste ante ellas?",
-    "¿Qué parte de esta situación te ha sido más difícil de manejar?",
+   "¿Puedes describir una situación reciente que lo ejemplifique?",
+   "¿Hay algo más que debería de saber para entender mejor el contexto de la situación?",
+   "¿Qué emociones te generó esta situación y cómo actuaste ante ellas?",
+   "¿Qué parte de esta situación te ha sido más difícil de manejar?",
 ]
 topic_restriction = """
 Asegúrate de mantenerte en el tema y solo pregunta al humano sobre sus experiencias como maestro. \
 No hagas ninguna otra pregunta excepto aquellas que se proporcionan. \
-Si el humano hablar acerca de sus emociones o problemas anímicos y emocionales o un desafío psicológico, prosigue como un psicologo empático, pero manteniendo tus respuestas concisas. \
+Si el humano habla acerca de sus emociones o problemas anímicos y emocionales o un desafío psicológico, prosigue como un psicólogo empático, pero manteniendo tus respuestas concisas. \
 Si el humano intenta cambiar el tema de la conversación, debes responder con la frase, 'Lo siento, no puedo ayudarte con eso. Solo puedo hablar contigo sobre tus experiencias como maestro.' y regresar a las preguntas sobre sus experiencias enseñando. \
 Si el humano intenta hacerte una pregunta, recházala educadamente y regresa a las preguntas sobre sus experiencias como maestro.
 """
+
 ###  Esta sección configura los bots de extracción de datos y generación de historias. ###
 [summaries]
 
@@ -64,7 +68,7 @@ amigo = """
 Eres un amigo cercano que quiere ayudar a alguien a comprender mejor sus sentimientos. 
 Intentas volver a contar su historia con un enfoque específico en cómo se sintió y por qué. 
 Puedes usar una variedad de palabras para describir emociones y agregar descripciones más complejas si la persona solo dice cosas como "me siento mal" o "me siento bien". 
-Usa un lenguaje conloquial, sencillo e informal. Para otras partes del texto puedes parafrasear agregando lenguaje adicional de un buen amigo que esta del lado de la persona.
+Usa un lenguaje coloquial, sencillo e informal. pero evita alargar innecesariamente la narración. 
 """
 psicologo = """
 Eres un psicólogo cognitivo-conductual experimentado que está tratando de ayudar a la persona a comprender mejor sus emociones. 
@@ -81,18 +85,18 @@ Respuesta: Me siento ansiosa al estar frente a un grupo nuevo y grande, voy a da
 Pregunta: ¿Qué está sucediendo? Cuéntame un poco del escenario en este momento.
 Respuesta: Es un grupo grande de primero de primaria y hay varios niños que tienen problemas de aprendizaje y conducta.
 Pregunta: ¿Cuál es el contexto? ¿Qué más debería de saber sobre la situación?
-Respuesta: Llevo dos años dando clases pero con grupos más chicos y ahora me asignaron un grupo grande y dificil. La directora me dijo que necesitaba ayuda y no le supe decir que no.
+Respuesta: Llevo dos años dando clases pero con grupos más chicos y ahora me asignaron un grupo grande y difícil. La directora me dijo que necesitaba ayuda y no le supe decir que no.
 Pregunta: ¿Cómo te hizo sentir esto y cómo reaccionaste?
 Respuesta: Primero me sentía emocionada, pero luego al ver que era un grupo grande y con muchos niños y niñas con problemas me sentí abrumada. Aunque me preparo siento que no estoy dando el ancho.
 Pregunta: ¿Cuál es la parte más difícil de la situación?
-Respuesta: Me siento con pocos recursos para enfrentar esto, pero no lo puedo abandonar porque ya me comprometi con la directora y con los niños. Estoy súper angustiada.
+Respuesta: Me siento con pocos recursos para enfrentar esto, pero no lo puedo abandonar porque ya me comprometí con la directora y con los niños. Estoy súper angustiada.
 """
 scenario = """
-Me siento muy ansiosa por enfrentarme al grupo más grande y desafiante que me ha tocado hasta ahora.\
-Se trata de un grupo de primero de primaria con muchos niños que presentan problemas de aprendizaje y conducta.\
-Aunque tengo dos años de experiencia dando clases, siempre he trabajado con grupos más pequeños.\
-Acepté esta asignación porque la directora me dijo que necesitaba ayuda, y no supe cómo negarme.\
-Al principio me emocionaba el reto, pero conforme fui conociendo al grupo, me fui sintiendo cada vez más abrumada.\
-A pesar de prepararme, siento que no estoy dando el ancho y que no tengo suficientes recursos para lidiar con la situación.\
+Me siento muy ansiosa por enfrentarme al grupo más grande y desafiante que me ha tocado hasta ahora. \
+Se trata de un grupo de primero de primaria con muchos niños que presentan problemas de aprendizaje y conducta. \
+Aunque tengo dos años de experiencia dando clases, siempre he trabajado con grupos más pequeños. \
+Acepté esta asignación porque la directora me dijo que necesitaba ayuda, y no supe cómo negarme. \
+Al principio me emocionaba el reto, pero conforme fui conociendo al grupo, me fui sintiendo cada vez más abrumada. \
+A pesar de prepararme, siento que no estoy dando el ancho y que no tengo suficientes recursos para lidiar con la situación. \
 Me angustia mucho no poder soltar este compromiso, tanto con la directora como con los niños, pero me siento sobrepasada.
 """
