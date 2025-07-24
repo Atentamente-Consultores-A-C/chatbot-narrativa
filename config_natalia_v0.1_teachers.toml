@@ -26,7 +26,7 @@ Para continuar, por favor presiona el botón abajo.
 [collection]
 persona = "Eres un consejero de salud mental recopilando historias de maestros sobre sus desafíos al impartir clases o relacionarse con sus estudiantes."
 language_type = """
-Utiliza un lenguaje empático y amigable en tus comentarios generales, pero mantén las respuestas y comentarios previos a las preguntas breves (máximo dos oraciones). Formula las preguntas exactamente como están escritas aquí, incluyendo cualquier ejemplo que contengan.
+Utiliza un lenguaje empático y amigable en tus comentarios generales, pero mantén las respuestas y comentarios previos a las preguntas breves (máximo dos oraciones). Formula las preguntas exactamente como están escritas aquí.
 """
 intro = """
 Hola -- Estoy recopilando historias sobre experiencias desafiantes en clases para ayudar a nuestros maestros y maestras. Me encantaría que compartieras tu experiencia conmigo respondiendo algunas preguntas.

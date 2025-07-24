@@ -64,6 +64,7 @@ def init_session():
         'waiting_for_listo': True,
         'micronarrativas': [],
         'vista_final': False,
+        'usar_sugerida': False,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -81,29 +82,6 @@ memory = ConversationBufferMemory(
 chat = ChatOpenAI(temperature=0.3, model=st.session_state.llm_model, openai_api_key=openai_api_key)
 
 prompt_template_raw = llm_prompts.questions_prompt_template
-
-def get_dynamic_example():
-    last_human = None
-    for msg in reversed(msgs.messages):
-        if msg.type == "human":
-            last_human = msg.content
-            break
-    if not last_human:
-        return ""
-    
-    example_prompt = PromptTemplate(
-        input_variables=["previous_answer"],
-        template=(
-            "Un maestro me dice que su mayor dificultad actualmente es: '{previous_answer}'. "
-            "Basándote únicamente en esa descripción, genera un ejemplo breve, concreto y realista de una situación que ilustre exactamente esa misma dificultad, en el mismo contexto y con el mismo enfoque que el maestro describió. "
-            "No inventes escenarios fuera de contexto, no asumas que es con alumnos si no se menciona. "
-            "Si la dificultad tiene que ver con colegas, emociones personales o administración escolar, mantente en ese ámbito. "
-            "Usa un lenguaje sencillo, en una sola línea, sin explicaciones adicionales, solo la situación como si fuera una pequeña escena."
-        )
-    )
-    rendered_prompt = example_prompt.format(previous_answer=last_human)
-    result = chat.invoke(rendered_prompt)
-    return f" Por ejemplo: {result.content}"
 
 if not st.session_state['consent']:
     with st.container():
@@ -161,7 +139,7 @@ if st.session_state.agentState == "select_micronarrative":
             st.text_area(
                 label="",
                 value=texto,
-                height=200,
+                height=800,
                 key=f"narrativa_col_{idx}",
                 disabled=True,
                 label_visibility="collapsed"
@@ -182,14 +160,10 @@ elif not st.session_state.agentState in ("summarise", "select_micronarrative") a
                 if prompt.strip().lower() == "listo":
                     st.session_state['waiting_for_listo'] = False
 
-            dynamic_example = ""
-            if not st.session_state['waiting_for_listo']:
-                dynamic_example = get_dynamic_example()
-
             conversation = LLMChain(
                 llm=chat,
                 prompt=PromptTemplate(
-                    input_variables=["history", "input", "dynamic_example"],
+                    input_variables=["history", "input"],
                     template=prompt_template_raw
                 ),
                 memory=memory,
@@ -198,8 +172,7 @@ elif not st.session_state.agentState in ("summarise", "select_micronarrative") a
 
             with st.spinner("💭 Pensando..."):
                 response = conversation.invoke({
-                    "input": prompt,
-                    "dynamic_example": dynamic_example
+                    "input": prompt
                 })
 
             final_message = response['text']
@@ -231,9 +204,19 @@ elif not st.session_state.agentState in ("summarise", "select_micronarrative") a
 
 if st.session_state.agentState == "summarise" and st.session_state.final_response:
     st.subheader("📄 Tu historia en tus propias palabras")
-    new_text = st.text_area("✍️ Edita tu micronarrativa si lo deseas", value=st.session_state.final_response, height=250)
 
-    if st.button("✅ Guardar versión final"):
+    guardar_final = False
+
+    if st.session_state.usar_sugerida:
+        new_text = st.session_state.final_response
+        st.session_state.usar_sugerida = False
+        guardar_final = True
+    else:
+        new_text = st.text_area("✍️ Edita tu micronarrativa si lo deseas", value=st.session_state.final_response, height=250)
+        if st.button("✅ Guardar versión final"):
+            guardar_final = True
+
+    if guardar_final:
         st.session_state.final_response = new_text
         try:
             sheet.append_row([new_text, datetime.now().isoformat()])
@@ -243,9 +226,9 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
         st.rerun()
 
     with st.container():
-        st.markdown("### ✨ ¿Quieres mejorar tu narrativa con ayuda de la IA?")
-        with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la IA", expanded=True):
-            st.chat_message("ai").markdown("Aquí puedes refinar la narrativa que elegiste, dime qué te gustaría agregar o cambiar. Si no hay cambios, por favor deja este espacio en blanco. Si ves bien la narrativa cómo está, puedes copiarla para ti. Espero que te haya ayudado a tener mayor claridad.")
+        st.markdown("### ✨ ¿Quieres mejorar tu narrativa con ayuda de la Inteligencia Artificial?")
+        with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
+            st.chat_message("ai").markdown("Aquí puedes refinar la narrativa que elegiste, dime qué te gustaría agregar o cambiar. Si no hay cambios, por favor deja este espacio en blanco. Si quieres hacer cambios te pido por favor que solo sea uno. Así nos aseguramos de que no se cambien cosas extra en tu narrativa.")
             adaptation_input = st.chat_input("Escribe cómo quieres mejorarla...")
             if adaptation_input:
                 st.chat_message("human").markdown(adaptation_input)
@@ -265,7 +248,4 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
 
                 placeholder.empty()
                 st.chat_message("ai").markdown(f"**Versión adaptada sugerida:**\n\n> {improved['new_scenario']}")
-
-                if st.button("✅ Usar versión sugerida"):
-                    st.session_state.final_response = improved['new_scenario']
-                    st.success("Narrativa actualizada con la sugerencia de IA.")
+                st.chat_message("ai").markdown("**Si ves bien esta narrativa cómo está, puedes copiarla para ti. Espero que te haya ayudado a tener mayor claridad.**")

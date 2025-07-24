@@ -32,10 +32,7 @@ class LLMConfig:
         )
 
         for count, question in enumerate(data_collection["questions"]):
-            if count == 1:  # segunda pregunta con ejemplo dinámico
-                questions_prompt += f"{count+1}. {question}{{dynamic_example}}\n"
-            else:
-                questions_prompt += f"{count+1}. {question}\n"
+            questions_prompt += f"{count+1}. {question}\n"
 
         questions_prompt += (
             "\nHaz cada pregunta de una en una. "
