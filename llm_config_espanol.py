@@ -1,34 +1,49 @@
-import tomllib
+import tomllib  # Librería estándar de Python para leer archivos TOML en binario
 
+# Clase que carga la configuración de LLM desde un archivo TOML
+# y genera todas las plantillas de prompts necesarias para el chatbot.
 class LLMConfig:
 
+    # Inicializa la configuración leyendo el archivo TOML
+    # y preparando los prompts y valores que usará el chatbot.
     def __init__(self, filename):
-
         with open(filename, "rb") as f:
-            config = tomllib.load(f)
+            config = tomllib.load(f)  # Carga el archivo TOML como diccionario
 
+        # Texto inicial y consentimiento del usuario
         self.intro_and_consent = config["consent"]["intro_and_consent"].strip()
 
+        # Prompt de inicio y plantilla para preguntas de recolección de datos
         self.questions_intro = config["collection"]["intro"].strip()
         self.questions_prompt_template = self.generate_questions_prompt_template(config["collection"])
-        self.questions_outro = "Gracias por compartir tu situación conmigo. Creo que tengo toda la información que necesito para apoyarte, pero déjame verificarlo."
+        self.questions_outro = (
+            "Gracias por compartir tu situación conmigo. "
+            "Creo que tengo toda la información que necesito para apoyarte, "
+            "pero déjame verificarlo."
+        )
 
+        # Prompt para extracción de información y resumen en JSON
         self.extraction_task = "Crea un escenario basado en estas respuestas."
         self.extraction_prompt_template = self.generate_extraction_prompt_template(config["summaries"])
-        self.summary_keys = list(config["summaries"]["questions"].keys())
+        self.summary_keys = list(config["summaries"]["questions"].keys())  # Claves JSON para extracción
         self.extraction_adaptation_prompt_template = self.generate_adaptation_prompt_template()
 
+        # Lista de personalidades para generar micronarrativas (ej. Psicólogo, Amigo, Periodista)
         self.personas = [persona.strip() for persona in list(config["summaries"]["personas"].values())]
+
+        # Ejemplo one-shot para guiar al modelo LLM
         self.one_shot = self.generate_one_shot(config["example"])
 
+        # Plantilla principal para generar la narrativa final
         self.main_prompt_template = self.generate_main_prompt_template(config["summaries"]["questions"])
 
 
+    # Genera la plantilla de prompt para hacer preguntas empáticas y secuenciales
     def generate_questions_prompt_template(self, data_collection):
-
         questions_prompt = (
             f"{data_collection['persona']}\n\n"
-            "Tu objetivo es recopilar respuestas estructuradas para las siguientes preguntas, formulando cada una de ellas con un preámbulo cálido y empático según las respuestas anteriores:\n\n"
+            "Tu objetivo es recopilar respuestas estructuradas para las siguientes preguntas, "
+            "formulando cada una con un preámbulo cálido y empático según las respuestas anteriores:\n\n"
         )
 
         for count, question in enumerate(data_collection["questions"]):
@@ -56,10 +71,10 @@ class LLMConfig:
 
         return questions_prompt
 
-
+    # Genera el prompt para extraer respuestas relevantes en JSON sin inventar información
     def generate_extraction_prompt_template(self, summaries):
-
         keys = list(summaries['questions'].keys())
+
         keys_string = f"`{keys[0]}`"
         for key in keys[1:-1]:
             keys_string += f", `{key}`"
@@ -70,7 +85,7 @@ class LLMConfig:
             "Eres un algoritmo experto de extracción de información. "
             "Extrae únicamente la información relevante de las respuestas del humano en el texto. "
             "Usa solamente las palabras y frases que contiene el texto. "
-            "Si no conoces el valor de un atributo que se te pide extraer, devuelve null para el valor de ese atributo.\n\n"
+            "Si no conoces el valor de un atributo que se te pide extraer, devuelve null.\n\n"
             f"Vas a producir un JSON con las siguientes claves: {keys_string}.\n\n"
             "Estas corresponden a la(s) siguiente(s) pregunta(s):\n"
         )
@@ -86,8 +101,8 @@ class LLMConfig:
         return extraction_prompt
 
 
+    # Genera el prompt para adaptar una narrativa según la petición del usuario (JSON con 'new_scenario')
     def generate_adaptation_prompt_template(self):
-
         prompt_adaptation = (
             "Eres un asistente servicial, ayudando a estudiantes a adaptar un escenario a su gusto. "
             "El escenario original con el que vino este estudiante:\n\n"
@@ -97,20 +112,18 @@ class LLMConfig:
             "cumpliendo con la petición del estudiante.\n\n"
             "Devuelve tu respuesta como un archivo JSON con una sola entrada llamada 'new_scenario'."
         )
-
         return prompt_adaptation
 
 
+    # Crea un ejemplo one-shot para guiar al LLM mostrando conversación de ejemplo y resultado esperado
     def generate_one_shot(self, example):
-
         one_shot = f"Ejemplo:\n{example['conversation']}"
         one_shot += f"\nEl escenario basado en estas respuestas: \"{example['scenario'].strip()}\""
-
         return one_shot
 
 
+    # Genera la plantilla principal para crear la narrativa final en JSON con 'output_scenario'
     def generate_main_prompt_template(self, questions):
-
         main_prompt_template = "{persona}\n\n"
         main_prompt_template += "{one_shot}\n\n"
         main_prompt_template += "Tu tarea:\nCrea un escenario basado en las siguientes respuestas:\n\n"
@@ -123,5 +136,4 @@ class LLMConfig:
             "\n{end_prompt}\n\n"
             "Tu respuesta debe ser un archivo JSON con una sola entrada llamada 'output_scenario'."
         )
-
         return main_prompt_template
