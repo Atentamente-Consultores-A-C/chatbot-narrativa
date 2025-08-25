@@ -101,7 +101,8 @@ if st.session_state.vista_final:
     st.markdown(f"> {st.session_state.final_response}")
 
     st.markdown("---")
-    st.markdown("### 📝 ¿Nos ayudas con tu opinión?")
+    st.markdown("### Tu experiencia es muy valiosa para nosotros. 🙌")
+    st.markdown("Ayúdanos completando esta breve encuesta de retroalimentación para mejorar el chatbot.")
     st.markdown(
         """
         <a href="https://forms.gle/pxBtvu8WPRAort7b7" target="_blank">
@@ -153,7 +154,7 @@ if st.session_state.agentState == "select_micronarrative":
                 label_visibility="collapsed"
             )
             # Botón para seleccionar narrativa
-            if st.button("✅ Elegir versión", key=f"elegir_col_{idx}"):
+            if st.button("Elegir versión", key=f"elegir_col_{idx}"):
                 st.session_state.final_response = texto
                 st.session_state.agentState = "summarise"
                 st.success("Narrativa seleccionada.")

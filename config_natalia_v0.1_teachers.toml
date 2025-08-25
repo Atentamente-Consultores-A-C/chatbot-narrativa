@@ -15,10 +15,12 @@
 
 [consent]
 intro_and_consent = """## ¡Bienvenido/a a nuestro prototipo para maestros y maestras!
-Ahora vas a interactuar con un chatbot diseñado para recopilar historias de las dificultades que has enfrentado en tus clases y/o con tus estudiantes. \
-Siéntete en confianza para contarle sobre tu situación para que pueda comprender lo que estás viviendo. \
-**Es importante que no menciones información personal o privada, como tu nombre completo, dirección, etc.**  
-Para continuar, por favor presiona el botón abajo. 
+Vas a interactuar con un chatbot que, a través de algunas preguntas, te ayudará a darle forma a lo que estás viviendo y a crear una narrativa con tus propias palabras.
+Esta información nos servirá para, muy pronto, generar recursos y recomendaciones que te apoyen en tu día a día como docente.
+
+👉 **No compartas información personal (como tu nombre completo, dirección, etc.).**
+
+👉 **Responde con confianza y en tus propias palabras**
 """
 
 ###  Esta sección configura el bot de recopilación de datos. ###
