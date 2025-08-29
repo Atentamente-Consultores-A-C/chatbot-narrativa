@@ -1,4 +1,4 @@
-import tomli as tomllib  # Librería estándar de Python para leer archivos TOML en binario
+import tomllib  # Librería estándar de Python para leer archivos TOML en binario
 
 # Clase que carga la configuración de LLM desde un archivo TOML
 # y genera todas las plantillas de prompts necesarias para el chatbot.
