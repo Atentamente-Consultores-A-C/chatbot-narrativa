@@ -106,3 +106,9 @@ button:has(span:contains("He leído")) {
     border: none !important;
     box-shadow: none !important;
 }
+
+.block-container {
+    max-width: 70% !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+}

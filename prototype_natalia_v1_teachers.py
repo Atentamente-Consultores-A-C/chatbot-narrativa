@@ -130,28 +130,41 @@ if st.session_state.agentState == "select_micronarrative":
     st.subheader("✨ Elige la narrativa que más se parece a tu experiencia")
 
     # Auto scroll al final para mostrar opciones
-    st.components.v1.html("""
-        <script>
-            window.addEventListener('load', function() {
-                setTimeout(function() {
-                    window.scrollTo(0, document.body.scrollHeight);
-                }, 300);
-            });
-        </script>
-    """, height=0)
+    # st.components.v1.html("""
+    #     <script>
+    #         window.addEventListener('load', function() {
+    #             setTimeout(function() {
+    #                 window.scrollTo(0, document.body.scrollHeight);
+    #             }, 300);
+    #         });
+    #     </script>
+    # """, height=0)
 
     # Mostrar cada narrativa en una columna
     cols = st.columns(len(st.session_state.micronarrativas))
     for idx, (col, texto) in enumerate(zip(cols, st.session_state.micronarrativas)):
         with col:
             st.markdown(f"**Opción {idx + 1}**")
-            st.text_area(
-                label="",
-                value=texto,
-                height=800,
-                key=f"narrativa_col_{idx}",
-                disabled=True,
-                label_visibility="collapsed"
+            st.markdown(
+                f"""
+                <textarea readonly tabindex="-1"
+                        style="
+                            width:100%; 
+                            height:800px; 
+                            font-weight:normal; 
+                            color:#333; 
+                            background-color:white; 
+                            border:1px solid #ccc; 
+                            border-radius:12px; 
+                            padding:12px; 
+                            resize:none;
+                            box-sizing:border-box;
+                            outline: none;
+                            user-select: none;">
+                {texto}
+                </textarea>
+                """,
+                unsafe_allow_html=True
             )
             # Botón para seleccionar narrativa
             if st.button("Elegir versión", key=f"elegir_col_{idx}"):
