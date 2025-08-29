@@ -245,18 +245,6 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
     else:
         # Usuario puede editar la narrativa final
         new_text = st.text_area("✍️ Edita tu micronarrativa si lo deseas", value=st.session_state.final_response, height=250)
-        if st.button("✅ Guardar versión final"):
-            guardar_final = True
-
-    # Guarda en Google Sheets y pasa a vista final
-    if guardar_final:
-        st.session_state.final_response = new_text
-        try:
-            sheet.append_row([new_text, datetime.now().isoformat()])
-        except Exception as e:
-            st.error(f"❌ Error al guardar en Google Sheets: {e}")
-        st.session_state.vista_final = True
-        st.rerun()
 
     # === OPCIÓN DE MEJORA CON IA ===
     with st.container():
@@ -289,3 +277,18 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
                 st.chat_message("ai").markdown(
                     "**Si ves bien esta narrativa cómo está, puedes copiarla para ti. Espero que te haya ayudado a tener mayor claridad.**"
                 )
+
+    # === BOTÓN DE GUARDADO FINAL (después de la sección de IA) ===
+    if not st.session_state.usar_sugerida:
+        if st.button("✅ Guardar versión final"):
+            guardar_final = True
+
+    # Guarda en Google Sheets y pasa a vista final
+    if guardar_final:
+        st.session_state.final_response = new_text
+        try:
+            sheet.append_row([new_text, datetime.now().isoformat()])
+        except Exception as e:
+            st.error(f"❌ Error al guardar en Google Sheets: {e}")
+        st.session_state.vista_final = True
+        st.rerun()
