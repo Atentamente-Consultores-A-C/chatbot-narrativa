@@ -1,4 +1,4 @@
-import tomllib  # Librería estándar de Python para leer archivos TOML en binario
+import tomli as tomllib  # Librería estándar de Python para leer archivos TOML en binario
 
 # Clase que carga la configuración de LLM desde un archivo TOML
 # y genera todas las plantillas de prompts necesarias para el chatbot.
@@ -51,6 +51,8 @@ class LLMConfig:
 
         questions_prompt += (
             "\nHaz cada pregunta de una en una. "
+            "No pongas los números de pregunta. "
+            "Siempre pon el texto de las preguntas en letra negrita. "
             f"{data_collection['language_type']} "
             "Asegúrate de obtener al menos una respuesta básica para cada pregunta antes de pasar a la siguiente. "
             "Nunca respondas por la persona. "
