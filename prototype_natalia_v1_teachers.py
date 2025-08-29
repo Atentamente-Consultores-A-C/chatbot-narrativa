@@ -275,7 +275,7 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
                 placeholder.empty()
                 st.chat_message("ai").markdown(f"**Versión adaptada sugerida:**\n\n> {improved['new_scenario']}")
                 st.chat_message("ai").markdown(
-                    "**Si ves bien esta narrativa cómo está, puedes copiarla para ti. Espero que te haya ayudado a tener mayor claridad.**"
+                    "**Si ves bien esta narrativa cómo está, puedes copiarla en el cuadro de texto de arriba y hacer más cambios de ser necesario. Espero que te haya ayudado a tener mayor claridad.**"
                 )
 
     # === BOTÓN DE GUARDADO FINAL (después de la sección de IA) ===
