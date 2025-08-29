@@ -14,7 +14,7 @@
 # Este es el texto que se mostrará en la primera página
 
 [consent]
-intro_and_consent = """## ¡Bienvenido/a a nuestro prototipo para maestros y maestras!
+intro_and_consent = """## ¡Bienvenido/a a nuestro chatbot para maestros y maestras!
 Vas a interactuar con un chatbot que, a través de algunas preguntas, te ayudará a darle forma a lo que estás viviendo y a crear una narrativa con tus propias palabras.
 Esta información nos servirá para, muy pronto, generar recursos y recomendaciones que te apoyen en tu día a día como docente.
 
@@ -39,6 +39,7 @@ questions = [
    "¿Puedes describir una situación reciente que lo ejemplifique?",
    "¿Hay algo más que debería de saber para entender mejor el contexto de la situación?",
    "¿Qué emociones te generó esta situación y cómo actuaste ante ellas?",
+   "¿Me podrías contar qué sentiste en el cuerpo y qué pensamientos tuviste en ese momento?",
    "¿Qué parte de esta situación te ha sido más difícil de manejar?",
 ]
 topic_restriction = """
