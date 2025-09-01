@@ -69,7 +69,7 @@ def init_session():
         'micronarrativas': [],        # Guarda las 3 narrativas generadas
         'vista_final': False,         # Determina si ya se muestra la narrativa final
         'usar_sugerida': False,       # Permite usar la narrativa adaptada sugerida
-        'narrativa_lista_flag': False,# Permite mostrar o no el chat input del recuadro de mejora con IA
+        'ai_used': False,# Permite mostrar o no el chat input del recuadro de mejora con IA
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -250,7 +250,7 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
     # === OPCIÓN DE MEJORA CON IA ===
     st.subheader("✨ ¿Quieres mejorar tu narrativa con ayuda de la Inteligencia Artificial?")
     with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
-        st.markdown("Aquí puedes refinar la narrativa que elegiste. **Escribe 'narrativa lista' cuando termines.**")
+        st.markdown("Aquí puedes refinar la narrativa que elegiste.")
 
         # Inicializa variables de sesión para este subchat
         if "adapted_response" not in st.session_state:
@@ -263,48 +263,37 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
             with st.chat_message(m["role"]):
                 st.markdown(m["content"])
 
-        if not st.session_state.narrativa_lista_flag:
-            adaptation_input = st.chat_input("Escribe cómo quieres mejorar tu narrativa...")
-            if adaptation_input:
-                st.session_state.adaptation_messages.append({"role": "human", "content": adaptation_input})
-                with st.chat_message("human"):
-                    st.markdown(adaptation_input)
+        adaptation_input = st.chat_input("Escribe cómo quieres mejorar tu narrativa...")
+        if adaptation_input:
+            st.session_state.adaptation_messages.append({"role": "human", "content": adaptation_input})
+            with st.chat_message("human"):
+                st.markdown(adaptation_input)
 
-                if adaptation_input.strip().lower() == "narrativa lista":
-                    st.session_state.narrativa_lista_flag = True
-                    # Copiar narrativa final
-                    st.session_state.final_response = st.session_state.adapted_response
-                    msg = (
-                        "Tu narrativa mejorada se copió al cuadro de texto de arriba. 👆\n\n"
-                        "Si quieres, puedes seguir editándola manualmente ahí antes de guardarla."
-                    )
-                    st.session_state.adaptation_messages.append({"role": "ai", "content": msg})
-                    with st.chat_message("ai"):
-                        st.markdown(msg)
-                    st.rerun()
-                else:
-                    # Prompt para adaptar narrativa sobre la última versión
-                    adaptation_prompt = PromptTemplate(
-                        input_variables=["input", "scenario"],
-                        template=llm_prompts.extraction_adaptation_prompt_template
-                    )
-                    parser = SimpleJsonOutputParser()
-                    chain = adaptation_prompt | chat | parser
+            st.session_state.ai_used = True
+            # Prompt para adaptar narrativa sobre la última versión
+            adaptation_prompt = PromptTemplate(
+                input_variables=["input", "scenario"],
+                template=llm_prompts.extraction_adaptation_prompt_template
+            )
+            parser = SimpleJsonOutputParser()
+            chain = adaptation_prompt | chat | parser
 
-                    with st.spinner("💭 Generando versión mejorada..."):
-                        improved = chain.invoke({
-                            "scenario": st.session_state.adapted_response,
-                            "input": adaptation_input
-                        })
+            with st.spinner("💭 Generando versión mejorada..."):
+                improved = chain.invoke({
+                    "scenario": st.session_state.adapted_response,
+                    "input": adaptation_input
+                })
 
-                    # Actualiza narrativa adaptada
-                    st.session_state.adapted_response = improved["new_scenario"]
+            # Actualiza narrativa adaptada
+            st.session_state.adapted_response = improved["new_scenario"]
 
-                    ai_message = f"**Versión sugerida:**\n\n> {st.session_state.adapted_response}"
-                    st.session_state.adaptation_messages.append({"role": "ai", "content": ai_message})
-                    with st.chat_message("ai"):
-                        st.markdown(ai_message)
-                    st.rerun()
+            ai_message = (f"**Versión sugerida:**\n\n> {st.session_state.adapted_response}\n\n"
+                            "Si ya ves bien esta versión, **guárdala con el botón de abajo**.\n\n"
+                            "Si no, puedes seguir editando con IA.")
+            st.session_state.adaptation_messages.append({"role": "ai", "content": ai_message})
+            with st.chat_message("ai"):
+                st.markdown(ai_message)
+            st.rerun()
 
     # === BOTÓN DE GUARDADO FINAL (después de la sección de IA) ===
     if not st.session_state.usar_sugerida:
@@ -313,7 +302,10 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
 
     # Guarda en Google Sheets y pasa a vista final
     if guardar_final:
+        if st.session_state.ai_used:
+            new_text = st.session_state.adapted_response
         st.session_state.final_response = new_text
+
         try:
             sheet.append_row([new_text, datetime.now().isoformat()])
         except Exception as e:

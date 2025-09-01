@@ -43,7 +43,7 @@ class LLMConfig:
         questions_prompt = (
             f"{data_collection['persona']}\n\n"
             "Tu objetivo es recopilar respuestas estructuradas para las siguientes preguntas, "
-            "formulando cada una con un preámbulo cálido y empático según las respuestas anteriores:\n\n"
+            "formulando cada una siempre con un preámbulo cálido y empático según las respuestas anteriores:\n\n"
         )
 
         for count, question in enumerate(data_collection["questions"]):
