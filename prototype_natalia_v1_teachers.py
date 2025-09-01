@@ -69,6 +69,7 @@ def init_session():
         'micronarrativas': [],        # Guarda las 3 narrativas generadas
         'vista_final': False,         # Determina si ya se muestra la narrativa final
         'usar_sugerida': False,       # Permite usar la narrativa adaptada sugerida
+        'narrativa_lista_flag': False,# Permite mostrar o no el chat input del recuadro de mejora con IA
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -247,36 +248,63 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
         new_text = st.text_area("✍️ Edita tu micronarrativa si lo deseas", value=st.session_state.final_response, height=250)
 
     # === OPCIÓN DE MEJORA CON IA ===
-    with st.container():
-        st.markdown("### ✨ ¿Quieres mejorar tu narrativa con ayuda de la Inteligencia Artificial?")
-        with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
-            st.chat_message("ai").markdown(
-                "Aquí puedes refinar la narrativa que elegiste..."
-            )
-            adaptation_input = st.chat_input("Escribe cómo quieres mejorarla...")
+    st.subheader("✨ ¿Quieres mejorar tu narrativa con ayuda de la Inteligencia Artificial?")
+    with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
+        st.markdown("Aquí puedes refinar la narrativa que elegiste. **Escribe 'narrativa lista' cuando termines.**")
+
+        # Inicializa variables de sesión para este subchat
+        if "adapted_response" not in st.session_state:
+            st.session_state.adapted_response = st.session_state.final_response
+        if "adaptation_messages" not in st.session_state:
+            st.session_state.adaptation_messages = []
+
+        # Mostrar historial de mejoras
+        for m in st.session_state.adaptation_messages:
+            with st.chat_message(m["role"]):
+                st.markdown(m["content"])
+
+        if not st.session_state.narrativa_lista_flag:
+            adaptation_input = st.chat_input("Escribe cómo quieres mejorar tu narrativa...")
             if adaptation_input:
-                st.chat_message("human").markdown(adaptation_input)
+                st.session_state.adaptation_messages.append({"role": "human", "content": adaptation_input})
+                with st.chat_message("human"):
+                    st.markdown(adaptation_input)
 
-                placeholder = st.empty()
-                with placeholder.container():
-                    st.chat_message("ai").markdown("💭 Estoy generando una versión mejorada...")
+                if adaptation_input.strip().lower() == "narrativa lista":
+                    st.session_state.narrativa_lista_flag = True
+                    # Copiar narrativa final
+                    st.session_state.final_response = st.session_state.adapted_response
+                    msg = (
+                        "Tu narrativa mejorada se copió al cuadro de texto de arriba. 👆\n\n"
+                        "Si quieres, puedes seguir editándola manualmente ahí antes de guardarla."
+                    )
+                    st.session_state.adaptation_messages.append({"role": "ai", "content": msg})
+                    with st.chat_message("ai"):
+                        st.markdown(msg)
+                    st.rerun()
+                else:
+                    # Prompt para adaptar narrativa sobre la última versión
+                    adaptation_prompt = PromptTemplate(
+                        input_variables=["input", "scenario"],
+                        template=llm_prompts.extraction_adaptation_prompt_template
+                    )
+                    parser = SimpleJsonOutputParser()
+                    chain = adaptation_prompt | chat | parser
 
-                # Prompt para adaptar narrativa
-                adaptation_prompt = PromptTemplate(
-                    input_variables=["input", "scenario"],
-                    template=llm_prompts.extraction_adaptation_prompt_template
-                )
-                parser = SimpleJsonOutputParser()
-                chain = adaptation_prompt | chat | parser
+                    with st.spinner("💭 Generando versión mejorada..."):
+                        improved = chain.invoke({
+                            "scenario": st.session_state.adapted_response,
+                            "input": adaptation_input
+                        })
 
-                with st.spinner('Generando versión mejorada...'):
-                    improved = chain.invoke({"scenario": st.session_state.final_response, "input": adaptation_input})
+                    # Actualiza narrativa adaptada
+                    st.session_state.adapted_response = improved["new_scenario"]
 
-                placeholder.empty()
-                st.chat_message("ai").markdown(f"**Versión adaptada sugerida:**\n\n> {improved['new_scenario']}")
-                st.chat_message("ai").markdown(
-                    "**Si ves bien esta narrativa cómo está, puedes copiarla en el cuadro de texto de arriba y hacer más cambios de ser necesario. Espero que te haya ayudado a tener mayor claridad.**"
-                )
+                    ai_message = f"**Versión sugerida:**\n\n> {st.session_state.adapted_response}"
+                    st.session_state.adaptation_messages.append({"role": "ai", "content": ai_message})
+                    with st.chat_message("ai"):
+                        st.markdown(ai_message)
+                    st.rerun()
 
     # === BOTÓN DE GUARDADO FINAL (después de la sección de IA) ===
     if not st.session_state.usar_sugerida:
