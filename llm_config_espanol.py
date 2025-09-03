@@ -53,6 +53,7 @@ class LLMConfig:
             "\nHaz cada pregunta de una en una. "
             "No pongas los números de pregunta. "
             "Siempre pon el texto de las preguntas en letra negrita. "
+            "Nunca digas algo que no sea el preámbulo o las preguntas. "
             f"{data_collection['language_type']} "
             "Asegúrate de obtener al menos una respuesta básica para cada pregunta antes de pasar a la siguiente. "
             "Nunca respondas por la persona. "
