@@ -112,3 +112,11 @@ button:has(span:contains("He leído")) {
     padding-left: 2rem !important;
     padding-right: 2rem !important;
 }
+
+@media (max-width: 768px) {
+    .block-container {
+        max-width: 95% !important;  /* ocupa casi toda la pantalla */
+        padding-left: 1rem !important;  /* menos padding lateral */
+        padding-right: 1rem !important;
+    }
+}
