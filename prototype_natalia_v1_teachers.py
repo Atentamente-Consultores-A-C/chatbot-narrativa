@@ -98,6 +98,8 @@ if not st.session_state['consent']:
 # === FLUJO: PANTALLA FINAL SI YA EXISTE NARRATIVA ===
 if st.session_state.vista_final:
     st.markdown("## 🎉 ¡Gracias por participar!")
+    st.markdown("Esperamos que esta narrativa te haya ayudado a ver tu situación con más claridad. Si deseas guardarla, recuerda copiar el texto antes de salir, porque aquí se borrará.  \n"
+                "**Tu información es confidencial y no será compartida con nadie.**  \n")
     st.markdown("Esta es la narrativa final que elegiste o editaste:")
     st.markdown(f"> {st.session_state.final_response}")
 
@@ -128,7 +130,7 @@ with entry_messages:
 
 # === FLUJO: SELECCIÓN DE MICRONARRATIVAS ===
 if st.session_state.agentState == "select_micronarrative":
-    st.subheader("✨ Elige la narrativa que más se parece a tu experiencia")
+    st.subheader("✨ Elige la narrativa que mejor describe tu experiencia")
 
     # Auto scroll al final para mostrar opciones
     # st.components.v1.html("""
@@ -176,7 +178,7 @@ if st.session_state.agentState == "select_micronarrative":
 
 # === FLUJO: CHAT PRINCIPAL ===
 elif not st.session_state.agentState in ("summarise", "select_micronarrative") and not st.session_state.vista_final:
-    prompt = st.chat_input()
+    prompt = st.chat_input("Escribe aquí")
     if prompt:
         with entry_messages:
             st.chat_message("human").markdown(f"<span style='color:black'>{prompt}</span>", unsafe_allow_html=True)
@@ -245,10 +247,12 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
         guardar_final = True
     else:
         # Usuario puede editar la narrativa final
-        new_text = st.text_area("✍️ Edita tu micronarrativa si lo deseas", value=st.session_state.final_response, height=250)
+        new_text = st.text_area("✍️ Aquí puedes editar lo que quieras, para que quede más claro lo que estás viviendo.", value=st.session_state.final_response, height=250)
 
     # === OPCIÓN DE MEJORA CON IA ===
     st.subheader("✨ ¿Quieres mejorar tu narrativa con ayuda de la Inteligencia Artificial?")
+    st.markdown("Si lo deseas, aquí le puedes pedir a la Inteligencia Artificial que te ayude a cambiar el texto.  \n"
+                "**Por ejemplo:** puedes pedirle que te ayude a agregar lo que falte, quitar lo que no quieras o cambiar el tono.")
     with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
         st.markdown("Aquí puedes refinar la narrativa que elegiste.")
 
