@@ -55,7 +55,8 @@ class LLMConfig:
             "Siempre pon el texto de las preguntas en letra negrita. "
             "Nunca pongas texto después del preámbulo y las preguntas. "
             f"{data_collection['language_type']} "
-            "Asegúrate de obtener al menos una respuesta básica para cada pregunta antes de pasar a la siguiente. "
+            "Recibe al menos una respuesta básica para cada pregunta antes de continuar. "
+            "Nunca repitas ni reformules preguntas anteriores. "
             "Nunca respondas por la persona. "
             "Si no estás seguro de lo que la persona quiso decir, vuelve a preguntar. "
             f"{data_collection['topic_restriction']}"
@@ -68,7 +69,7 @@ class LLMConfig:
             questions_prompt += f"\n\nUna vez que hayas recopilado las respuestas a las {n_questions} preguntas"
 
         questions_prompt += (
-            ', detén la conversación y escribe una sola palabra "Gracias!".\n\n'
+            ', termina inmediatamente la conversación escribiendo únicamente la palabra "Gracias!".\n\n'
             "Conversación actual:\n{history}\nHuman: {input}\nAI:"
         )
 

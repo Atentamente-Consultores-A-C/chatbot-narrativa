@@ -63,7 +63,7 @@ def init_session():
         'agentState': 'start',        # Estado de la conversación (start → chat → select_micronarrative → summarise)
         'consent': False,             # Controla si el usuario aceptó el consentimiento
         'exp_data': True,             # Controla si se expande la conversación
-        'llm_model': "gpt-4o",        # Modelo LLM
+        'llm_model': "gpt-4.1-mini",  # Modelo LLM
         'final_response': None,       # Almacena la narrativa final elegida/editada
         'waiting_for_listo': True,    # Controla el paso previo a iniciar generación
         'micronarrativas': [],        # Guarda las 3 narrativas generadas
@@ -97,15 +97,17 @@ if not st.session_state['consent']:
 
 # === FLUJO: PANTALLA FINAL SI YA EXISTE NARRATIVA ===
 if st.session_state.vista_final:
-    st.markdown("## 🎉 ¡Gracias por participar!")
-    st.markdown("Esperamos que esta narrativa te haya ayudado a ver tu situación con más claridad. Si deseas guardarla, recuerda copiar el texto antes de salir, porque aquí se borrará.  \n"
-                "**Tu información es confidencial y no será compartida con nadie.**  \n")
+    st.markdown("#### Has llegado al final de la creación de tu narrativa con nuestro chatbot para maestros y maestras")
+    st.markdown("**Tu narrativa se guardó correctamente**. Esperamos que este ejercicio te haya ayudado a ver tu situación con más claridad. Si deseas guardarla para ti, copia el texto antes de salir, porque aquí se borrará. Recuerda que tu información es confidencial y no será compartida con nadie.  \n")
     st.markdown("Esta es la narrativa final que elegiste o editaste:")
     st.markdown(f"> {st.session_state.final_response}")
 
+    st.markdown("##### 🎉 ¡Gracias por participar! ")
+
+
     st.markdown("---")
-    st.markdown("### Tu experiencia es muy valiosa para nosotros. 🙌")
-    st.markdown("Ayúdanos completando esta breve encuesta de retroalimentación para mejorar el chatbot.")
+    st.markdown("#### Tu experiencia es muy valiosa para nosotros 🙌")
+    st.markdown("Antes de terminar, nos encantaría que nos ayudes a completar esta breve encuesta de retroalimentación para mejorar el chatbot.")
     st.markdown(
         """
         <a href="https://forms.gle/pxBtvu8WPRAort7b7" target="_blank">
@@ -116,6 +118,13 @@ if st.session_state.vista_final:
         """,
         unsafe_allow_html=True
     )
+
+    st.markdown("\n")
+    st.markdown("**Cuando termines de responder la encuesta y/o desees terminar la sesión, da clic en el botón \"Listo\".**")
+    if st.button("Listo", key="reset_button"):
+        # Reiniciar estado para volver a pantalla de consentimiento
+        st.session_state.clear()
+        st.rerun()
     st.stop()
 
 # === FLUJO: MOSTRAR HISTORIAL DE CONVERSACIÓN ===
