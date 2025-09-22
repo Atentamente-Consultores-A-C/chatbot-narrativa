@@ -256,7 +256,7 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
         guardar_final = True
     else:
         # Usuario puede editar la narrativa final
-        new_text = st.text_area("✍️ Aquí puedes editar lo que quieras, para que quede más claro lo que estás viviendo.", value=st.session_state.final_response, height=250)
+        new_text = st.text_area("✍️ Aquí puedes editar lo que quieras, para que quede más claro lo que estás viviendo. \n Si quieres hacer cambios con la Inteligencia Artificial, puedes hacerlo abajo. Si no, puedes guardar la versión final dando clic al botón \"Guardar versión final\".", value=st.session_state.final_response, height=250)
 
     # === OPCIÓN DE MEJORA CON IA ===
     st.subheader("✨ ¿Quieres mejorar tu narrativa con ayuda de la Inteligencia Artificial?")
