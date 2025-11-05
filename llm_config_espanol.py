@@ -1,4 +1,8 @@
-import tomllib  # Librería estándar de Python para leer archivos TOML en binario
+# Librería estándar de Python para leer archivos TOML en binario
+try:
+    import tomllib  # stdlib, Python >= 3.11
+except ModuleNotFoundError:
+    import tomli as tomllib  # backport para Python < 3.11
 
 # Clase que carga la configuración de LLM desde un archivo TOML
 # y genera todas las plantillas de prompts necesarias para el chatbot.

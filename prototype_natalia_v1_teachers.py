@@ -7,7 +7,7 @@ st.image("atentamente_logo.svg")  # Muestra logo del proyecto
 import os
 import sys
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
-from langchain.memory import ConversationBufferMemory
+from langchain.memory.buffer import ConversationBufferMemory
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain_openai import ChatOpenAI
