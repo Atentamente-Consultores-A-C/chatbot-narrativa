@@ -60,7 +60,7 @@ smith_client = Client()  # Cliente para LangSmith (trazabilidad y debugging)
 def init_session():
     defaults = {
         'run_id': None,
-        'agentState': 'start',        # Estado de la conversación (start → chat → select_micronarrative → summarise)
+        'agentState': 'start',        # Estado de la conversación (start → chat → select_micronarrative → reflect → sliders → abcd → summarise)
         'consent': False,             # Controla si el usuario aceptó el consentimiento
         'exp_data': True,             # Controla si se expande la conversación
         'llm_model': "gpt-4.1-mini",  # Modelo LLM
@@ -69,7 +69,9 @@ def init_session():
         'micronarrativas': [],        # Guarda las 3 narrativas generadas
         'vista_final': False,         # Determina si ya se muestra la narrativa final
         'usar_sugerida': False,       # Permite usar la narrativa adaptada sugerida
-        'ai_used': False,# Permite mostrar o no el chat input del recuadro de mejora con IA
+        'ai_used': False,             # Permite mostrar o no el chat input del recuadro de mejora con IA
+        'abcd_top': "atencion",
+        'abcd_ratings': { "atencion": 3, "bondad": 3, "claridad": 3, "direccion": 3},
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -79,17 +81,26 @@ init_session()
 
 # === CONFIGURACIÓN DE LLM Y MEMORIA DE CONVERSACIÓN ===
 openai_api_key = st.secrets["OPENAI_API_KEY"]
-msgs = StreamlitChatMessageHistory(key="langchain_messages")  # Historial de mensajes para LangChain
 
-memory = ConversationBufferMemory(
-    memory_key="history", input_key="input", chat_memory=msgs
+msgs_questions = StreamlitChatMessageHistory(key="langchain_messages")  # Historial de mensajes para LangChain
+memory_questions = ConversationBufferMemory(
+    memory_key="history", input_key="input", chat_memory=msgs_questions
+)
+
+msgs_reflect = StreamlitChatMessageHistory(key="reflect_messages")
+memory_reflect = ConversationBufferMemory(
+    memory_key="history", input_key="input", chat_memory=msgs_reflect
+)
+
+msgs_abcd = StreamlitChatMessageHistory(key="abcd_messages")
+memory_abcd = ConversationBufferMemory(
+    memory_key="history", input_key="input", chat_memory=msgs_abcd
 )
 
 chat = ChatOpenAI(temperature=0.3, model=st.session_state.llm_model, openai_api_key=openai_api_key)
-prompt_template_raw = llm_prompts.questions_prompt_template  # Prompt base desde TOML
 
 # === FLUJO: PANTALLA DE CONSENTIMIENTO ===
-if not st.session_state['consent']:
+if not st.session_state.consent:
     with st.container():
         st.markdown(llm_prompts.intro_and_consent)  # Texto inicial desde TOML
         st.button("He leído, entiendo", key="consent_button", on_click=lambda: st.session_state.update({"consent": True}))
@@ -129,8 +140,35 @@ if st.session_state.vista_final:
 
 # === FLUJO: MOSTRAR HISTORIAL DE CONVERSACIÓN ===
 entry_messages = st.expander("🗣️ Conversación", expanded=st.session_state['exp_data'])
+
+if st.session_state.agentState == "reflect" or st.session_state.agentState == "sliders":
+    msgs = msgs_reflect
+    memory = memory_reflect
+    lp_intro = llm_prompts.reflect_intro
+    prompt_template_raw = llm_prompts.reflect_prompt_template
+elif st.session_state.agentState == "abcd":
+    msgs = msgs_abcd
+    memory = memory_abcd
+    if st.session_state.abcd_top == "atencion":
+        prompt_template_raw = llm_prompts.a_prompt_template
+        lp_intro = llm_prompts.a_intro
+    elif st.session_state.abcd_top == "bondad":
+        prompt_template_raw = llm_prompts.b_prompt_template
+        lp_intro = llm_prompts.b_intro
+    elif st.session_state.abcd_top == "claridad":
+        prompt_template_raw = llm_prompts.c_prompt_template
+        lp_intro = llm_prompts.c_intro
+    else:
+        prompt_template_raw = llm_prompts.d_prompt_template
+        lp_intro = llm_prompts.d_intro
+else:
+    msgs = msgs_questions
+    memory = memory_questions
+    lp_intro = llm_prompts.questions_intro
+    prompt_template_raw = llm_prompts.questions_prompt_template  # Prompt base desde TOML
+
 if not msgs.messages:
-    msgs.add_ai_message(llm_prompts.questions_intro)  # Primer mensaje del bot
+        msgs.add_ai_message(lp_intro)  # Primer mensaje del bot
 
 with entry_messages:
     for m in msgs.messages:
@@ -140,17 +178,6 @@ with entry_messages:
 # === FLUJO: SELECCIÓN DE MICRONARRATIVAS ===
 if st.session_state.agentState == "select_micronarrative":
     st.subheader("✨ Elige la narrativa que mejor describe tu experiencia")
-
-    # Auto scroll al final para mostrar opciones
-    # st.components.v1.html("""
-    #     <script>
-    #         window.addEventListener('load', function() {
-    #             setTimeout(function() {
-    #                 window.scrollTo(0, document.body.scrollHeight);
-    #             }, 300);
-    #         });
-    #     </script>
-    # """, height=0)
 
     # Mostrar cada narrativa en una columna
     cols = st.columns(len(st.session_state.micronarrativas))
@@ -185,17 +212,67 @@ if st.session_state.agentState == "select_micronarrative":
                 st.success("Narrativa seleccionada.")
                 st.rerun()
 
+# === FLUJO: SLIDERS DE ABCD ===
+if st.session_state.agentState == "sliders":
+    st.subheader("🧠 Las 4 cualidades del entrenamiento mental")
+    st.markdown("Te mostraré una breve descripción de cada desequilibrio, y tú me dirás qué tanto sientes que estuvo presente en tu mente en ese momento.  \n"
+                "👉 Usa una escala del 1 al 5 (1 = para nada, 5 = muy presente).")
+    
+    #Atención
+    d = llm_prompts.abcd_dims["atencion"]
+    st.markdown(f"**{d['title']}**")
+    st.markdown(d["desc"])
+    st.session_state.abcd_ratings["atencion"] = st.slider(
+        llm_prompts.abcd_ui["slider_label"], 1, 5, st.session_state.abcd_ratings["atencion"], key="rate_atencion")
+    st.markdown("---")
+
+    # Bondad
+    d = llm_prompts.abcd_dims["bondad"]
+    st.markdown(f"**{d['title']}**")
+    st.markdown(d["desc"])
+    st.session_state.abcd_ratings["bondad"] = st.slider(
+        llm_prompts.abcd_ui["slider_label"], 1, 5, st.session_state.abcd_ratings["bondad"], key="rate_bondad")
+    st.markdown("---")
+
+    # Claridad
+    d = llm_prompts.abcd_dims["claridad"]
+    st.markdown(f"**{d['title']}**")
+    st.markdown(d["desc"])
+    st.session_state.abcd_ratings["claridad"] = st.slider(
+        llm_prompts.abcd_ui["slider_label"], 1, 5, st.session_state.abcd_ratings["claridad"], key="rate_claridad")
+    st.markdown("---")
+
+    # Dirección
+    d = llm_prompts.abcd_dims["direccion"]
+    st.markdown(f"**{d['title']}**")
+    st.markdown(d["desc"])
+    st.session_state.abcd_ratings["direccion"] = st.slider(
+        llm_prompts.abcd_ui["slider_label"], 1, 5, st.session_state.abcd_ratings["direccion"], key="rate_direccion")
+    
+    if st.button("Guardar y continuar ➡️"):
+        r = {
+                "atencion":  int(st.session_state.abcd_ratings["atencion"] or 0),
+                "bondad":    int(st.session_state.abcd_ratings["bondad"] or 0),
+                "claridad":  int(st.session_state.abcd_ratings["claridad"] or 0),
+                "direccion": int(st.session_state.abcd_ratings["direccion"] or 0),
+            }
+        order = llm_prompts.abcd_ui["tie_break_order"]
+        st.session_state.abcd_top = max(order, key=lambda k: (r[k], -order.index(k)))
+        st.session_state.agentState = "abcd"
+        st.success("Calificaciones guardadas")
+        st.rerun()
+
 # === FLUJO: CHAT PRINCIPAL ===
-elif not st.session_state.agentState in ("summarise", "select_micronarrative") and not st.session_state.vista_final:
+elif not st.session_state.agentState in ("summarise", "select_micronarrative", "sliders") and not st.session_state.vista_final:
     prompt = st.chat_input("Escribe aquí")
     if prompt:
         with entry_messages:
             st.chat_message("human").markdown(f"<span style='color:black'>{prompt}</span>", unsafe_allow_html=True)
 
             # Controla transición tras mensaje "listo"
-            if st.session_state['waiting_for_listo']:
+            if st.session_state.waiting_for_listo:
                 if prompt.strip().lower() == "listo":
-                    st.session_state['waiting_for_listo'] = False
+                    st.session_state.waiting_for_listo = False
 
             # Cadena principal del chat
             conversation = LLMChain(
@@ -215,33 +292,46 @@ elif not st.session_state.agentState in ("summarise", "select_micronarrative") a
             final_message = response['text']
             # Si llega el trigger "Gracias!" pasa a generación de micronarrativas
             if "Gracias!" in final_message:
-                final_message += " A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar."
-                
+                if st.session_state.agentState != "reflect" and  st.session_state.agentState != "abcd":
+                    final_message += " A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar."
+                if st.session_state.agentState == "reflect":
+                    final_message += llm_prompts.reflect_outro
+                if st.session_state.agentState == "abcd":
+                    final_message += llm_prompts.abcd_outro
+
             st.chat_message("ai").markdown(f"<span style='color:black'>{final_message}</span>", unsafe_allow_html=True)
 
             # === GENERACIÓN DE MICRONARRATIVAS ===
             if "Gracias!" in response['text']:
-                summary_prompt = PromptTemplate.from_template(llm_prompts.main_prompt_template)
-                parser = SimpleJsonOutputParser()
-                chain = summary_prompt | chat | parser
-                full_history = "\n".join([f"{m.type.upper()}: {m.content}" for m in msgs.messages])
-                summary_input = {key: full_history for key in llm_prompts.summary_keys}
-                micronarrativas = []
+                if st.session_state.agentState != "reflect" and  st.session_state.agentState != "abcd":
+                    summary_prompt = PromptTemplate.from_template(llm_prompts.main_prompt_template)
+                    parser = SimpleJsonOutputParser()
+                    chain = summary_prompt | chat | parser
+                    full_history = "\n".join([f"{m.type.upper()}: {m.content}" for m in msgs.messages])
+                    summary_input = {key: full_history for key in llm_prompts.summary_keys}
+                    micronarrativas = []
 
-                # Genera una narrativa por cada personalidad definida en TOML
-                for persona in llm_prompts.personas:
-                    with st.spinner(f"💭 Generando narrativas"):
-                        result = chain.invoke({
-                            "persona": persona,
-                            "one_shot": llm_prompts.one_shot,
-                            "end_prompt": llm_prompts.extraction_task,
-                            **summary_input
-                        })
-                    micronarrativas.append(result['output_scenario'])
+                    # Genera una narrativa por cada personalidad definida en TOML
+                    for persona in llm_prompts.personas:
+                        with st.spinner(f"💭 Generando narrativas"):
+                            result = chain.invoke({
+                                "persona": persona,
+                                "one_shot": llm_prompts.one_shot,
+                                "end_prompt": llm_prompts.extraction_task,
+                                **summary_input
+                            })
+                        micronarrativas.append(result['output_scenario'])
 
-                # Guarda narrativas y cambia de estado
-                st.session_state.micronarrativas = micronarrativas
-                st.session_state.agentState = "select_micronarrative"
+                    # Guarda narrativas y cambia de estado
+                    st.session_state.micronarrativas = micronarrativas
+                    st.session_state.agentState = "select_micronarrative"
+
+                if st.session_state.agentState == "reflect":
+                    st.session_state.agentState = "sliders"
+
+                if st.session_state.agentState == "abcd":
+                    st.session_state.vista_final = True
+
                 st.rerun()
 
 # === FLUJO: RESUMEN Y EDICIÓN FINAL ===
@@ -323,5 +413,8 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
             sheet.append_row([new_text, datetime.now().isoformat()])
         except Exception as e:
             st.error(f"❌ Error al guardar en Google Sheets: {e}")
-        st.session_state.vista_final = True
+        
+        st.session_state.agentState = "reflect"
+        st.session_state.waiting_for_listo = True
         st.rerun()
+            

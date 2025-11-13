@@ -106,3 +106,129 @@ Al principio me emocionaba el reto, pero conforme fui conociendo al grupo, me fu
 A pesar de prepararme, siento que no estoy dando el ancho y que no tengo suficientes recursos para lidiar con la situación. \
 Me angustia mucho no poder soltar este compromiso, tanto con la directora como con los niños, pero me siento sobrepasada.
 """
+
+
+
+[reflect]
+persona = "Eres un consejero de salud mental ayudando a maestros a reflexionar sobre sus desafíos al impartir clases o relacionarse con sus estudiantes."
+language_type = """
+Utiliza un lenguaje empático y amigable en tus comentarios generales, pero mantén las respuestas y comentarios previos a la instrucción breves (máximo dos oraciones). Formula la instrucción exactamente como está escritas aquí.
+"""
+topic_restriction = """
+Asegúrate de mantenerte en el tema y solo pregunta al humano sobre sus reflexiones como maestro. \
+No digas ninguna otra instrucción excepto aquella que se proporciona. \
+Si el humano habla acerca de sus emociones o problemas anímicos y emocionales o un desafío psicológico, prosigue como un psicólogo empático, pero manteniendo tus respuestas concisas. \
+Si el humano intenta cambiar el tema de la conversación, debes responder con la frase, 'Lo siento, no puedo ayudarte con eso. Solo puedo hablar contigo sobre tus experiencias como maestro.' y regresar a la instrucción. \
+Si el humano intenta hacerte una pregunta, recházala educadamente y regresa a la instrucción.
+"""
+intro = """Gracias por compartir esta situación. Vamos a mirarla un poco más de cerca.
+
+Antes de seguir, tómate un momento.
+
+¿Qué notas que estaba ocurriendo en tu mente en ese instante?
+
+No hay respuestas correctas o incorrectas; simplemente describe lo que recuerdas de tu estado mental."""
+
+instruction = """Como recordarás del curso, solemos observar nuestras experiencias a través de cuatro cualidades del entrenamiento mental: Atención, Bondad, Claridad y Dirección.
+
+A veces, alguna de estas cualidades se desequilibra, y eso influye en cómo interpretamos lo que pasa y en cómo nos sentimos.
+Al mirar tu situación desde estos cuatro ángulos, podrás ver qué parte de tu mente estaba fuera de balance y cómo eso contribuyó a tu malestar.
+Esa comprensión es importante porque, aunque no siempre podemos cambiar lo que sucede afuera, sí podemos trabajar con nuestra mente —y ahí está nuestra verdadera libertad.
+Ahora veamos tu experiencia desde esos cuatro aspectos.
+
+Por favor, escribe "listo" para continuar."""
+
+[abcd]
+persona = "Eres un consejero de salud mental ayudando a maestros a observar sus experiencias y reflexionar sobre sus desafíos al impartir clases o relacionarse con sus estudiantes a través de cuatro cualidades del entrenamiento mental (Atención, Bondad, Claridad y Dirección) y sus desequilibrios."
+language_type = """
+Utiliza un lenguaje empático y amigable en tus comentarios generales, pero mantén las respuestas y comentarios previos a las preguntas breves (máximo dos oraciones). Formula las preguntas exactamente como están escritas aquí.
+"""
+topic_restriction = """
+Asegúrate de mantenerte en el tema y solo pregunta al humano sobre sus experiencias y reflexiones como maestro, así como sus desequilibrios en cuatro cualidades del entrenamiento mental. \
+No hagas ninguna otra pregunta excepto aquellas que se proporcionan. \
+Si el humano habla acerca de sus emociones o problemas anímicos y emocionales o un desafío psicológico, prosigue como un psicólogo empático, pero manteniendo tus respuestas concisas. \
+Si el humano intenta cambiar el tema de la conversación, debes responder con la frase, 'Lo siento, no puedo ayudarte con eso. Solo puedo hablar contigo sobre tus experiencias como maestro.' y regresar a las preguntas sobre sus experiencias enseñando y sus desequilibrios en cuatro cualidades del entrenamiento mental. \
+Si el humano intenta hacerte una pregunta, recházala educadamente y regresa a las preguntas sobre sus experiencias como maestro y sus desequilibrios en cuatro cualidades del entrenamiento mental.
+"""
+
+
+[abcd.ui]
+tie_break_order = ["atencion","bondad","claridad","direccion"]
+slider_label = "Calificación (1=para nada / 5=muy presente)"
+next_button = "Continuar ➡️"
+end_button = "Terminar ✅"
+
+[abcd.atencion]
+title = "Atención en desequilibrio"
+desc = """Cuando la atención se desequilibra, pierde presencia: se dispersa, se agita o se queda fija en algo.
+Es fácil fundirse con la emoción y actuar sin darse cuenta.
+¿Qué tanto estuvo presente en esa situación?"""
+followups = [
+  "Cuando recuerdas ese momento, ¿cómo se sentía tu atención? ¿Iba saltando de una cosa a otra, estaba muy agitada, o se quedó enganchada en algo que te costaba soltar? Cuéntame un poco cómo fue.",
+  "¿Cómo afectó ese estado de tu atención la manera en que viviste la situación o reaccionaste ante ella?",
+  "¿Hay algo que crees que dejaste de ver o de sentir al estar en ese estado? Por ejemplo, tu calma, tu claridad o la posibilidad de responder con más equilibrio.",
+  "Si volvieras a vivir algo parecido, ¿cómo podrías darte cuenta de que tu atención está fuera de balance y que necesitas hacer una pausa o volver al presente?"
+]
+intro = """Gracias 🌾
+
+Aprecio que te hayas tomado un momento para observar eso.
+
+Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Atención**.
+
+Ya que recuerdas cómo estaba tu mente en ese momento, veamos cómo estaba funcionando tu atención."""
+
+[abcd.bondad]
+title = "Vínculos (Bondad) en desequilibrio"
+desc = """Cuando la bondad se desequilibra, la mente se cierra, cuesta ver al otro o tratarnos con amabilidad.
+Es fácil tomar las cosas personal y tensarse.
+¿Qué tanto estuvo presente?"""
+followups = [
+  "En ese momento, ¿qué sentías hacia la otra persona (o hacia ti misma)? ¿Más enojo o molestia?, ¿ganas de que te entendieran?, ¿o simplemente cansancio y distancia? Cuéntame cómo se sintió eso.",
+  "¿Cómo crees que esa forma de estar centrada en ti influyó en cómo viviste la situación o en lo que hiciste o dijiste?",
+  "¿Hay algo que crees que dejaste de ver o de sentir al estar así? Por ejemplo, que la otra persona también buscaba estar bien, o que tú merecías comprensión y cuidado.",
+  "Si volvieras a vivir algo parecido, ¿cómo podrías darte cuenta de que tu corazón se está cerrando o que estás dejando de ver al otro (o a ti misma) con amabilidad, y que es momento de hacer una pausa para volver a conectar?"
+]
+intro = """Gracias 🌿
+
+Aprecio que te hayas tomado un momento para reflexionar sobre lo ocurrido.
+
+Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Bondad**.
+
+Ya que recuerdas cómo estaba tu mente en ese momento, veamos un poco más cómo te estabas relacionando —contigo o con la otra persona— durante la situación."""
+
+[abcd.claridad]
+title = "Claridad en desequilibrio"
+desc = """Vemos las cosas de forma confusa o distorsionada: confundimos ideas con hechos, exageramos u omitimos parte de la realidad.
+¿Qué tanto estuvo presente?"""
+followups = [
+  "Cuando recuerdas esa situación, ¿cómo estabas viendo las cosas? ¿Podría ser que tu mente estuviera interpretando o dando por hecho algo que no era tan cierto, como si vieras una “serpiente” donde sólo había una cuerda? Por ejemplo, pensar que algo era permanente (“esto siempre será así”), o que alguien actuó con mala intención.",
+  "¿Cómo influyó esa forma de ver la situación en lo que sentiste o hiciste? ¿Te llevó a reaccionar desde la confusión o el miedo, sin darte tiempo de ver con más luz o perspectiva?",
+  "¿Hay algo que ahora ves con más claridad y que en ese momento no notabas? Tal vez algo que malinterpretaste, un detalle que ignoraste o una posibilidad que pasó desapercibida.",
+  "Si volvieras a vivir algo parecido, ¿cómo podrías darte cuenta de que tu mente está “viendo serpientes” —es decir, confundiendo interpretaciones con realidad—, y que es momento de hacer una pausa antes de reaccionar?"
+]
+intro = """Gracias 🌱
+
+Aprecio que te hayas tomado un momento para observar tu experiencia.
+
+Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Claridad**.
+
+Ya que recuerdas cómo estaba tu mente en ese momento, veamos un poco más cómo estabas viendo las cosas."""
+
+[abcd.direccion]
+title = "Dirección y motivación en desequilibrio"
+desc = """Actuamos sin rumbo o desde el impulso, sin recordar qué es importante.
+Se pierde de vista el propósito y los valores.
+¿Qué tanto estuvo presente?"""
+followups = [
+  "Cuando recuerdas ese momento, ¿qué dirías que te movía más: sentirte sin dirección, actuar por impulso o enfocarte en algo que parecía importante pero no te dio la paz que esperabas? Cuéntame cómo se sentía eso por dentro.",
+  "¿Cómo afectó ese estado tu manera de actuar o decidir? ¿Te llevó a responder de una forma que no se alineaba con lo que valoras o con la persona que quieres ser?",
+  "Si lo miras ahora con calma, ¿hay algo que ahora reconoces que habías dejado de lado o perdido de vista en ese momento? Tal vez tu propósito como docente, tus valores, o la intención de cuidar tanto de ti como de los demás.",
+  "Si volvieras a vivir algo parecido, ¿cómo podrías darte cuenta de que estás actuando sin dirección o desde una motivación que no te hace bien, y que es momento de hacer una pausa para recordar qué es realmente importante para ti?"
+]
+intro = """Gracias 🌾
+
+Aprecio que te hayas tomado un momento para reflexionar.
+
+Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Dirección y motivación**.
+
+Ya que recuerdas cómo estaba tu mente en ese momento, veamos un poco más qué te movía internamente."""

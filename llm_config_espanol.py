@@ -41,6 +41,35 @@ class LLMConfig:
         # Plantilla principal para generar la narrativa final
         self.main_prompt_template = self.generate_main_prompt_template(config["summaries"]["questions"])
 
+        # Prompt de inicio y plantilla para reflexión e inicio de etapa ABCD
+        self.reflect_intro = config["reflect"]["intro"].strip()
+        self.reflect_prompt_template = self.generate_reflect_prompt_template(config["reflect"])
+        self.reflect_outro = (
+            " Gracias por compartir tu situación conmigo. "
+            "Esta reflexión es un regalo para tu práctica. 🌱"
+        )
+
+        # Prompt de followup y plantilla para preguntas de desequilibrios en el ABCD
+        self.a_intro = config["abcd"]["atencion"]["intro"].strip()
+        self.b_intro = config["abcd"]["bondad"]["intro"].strip()
+        self.c_intro = config["abcd"]["claridad"]["intro"].strip()
+        self.d_intro = config["abcd"]["direccion"]["intro"].strip()
+        self.a_prompt_template = self.generate_abcd_prompt_template(config["abcd"], "atencion")
+        self.b_prompt_template = self.generate_abcd_prompt_template(config["abcd"], "bondad")
+        self.c_prompt_template = self.generate_abcd_prompt_template(config["abcd"], "claridad")
+        self.d_prompt_template = self.generate_abcd_prompt_template(config["abcd"], "direccion")
+        self.abcd_outro = (
+            " Gracias por tu apertura. "
+            "Espero que esta indagación interna te ayude en situaciones futuras."
+        )
+        self.abcd_ui = config["abcd"].get("ui", {})
+        self.abcd_dims = {
+            "atencion": config["abcd"]["atencion"],
+            "bondad": config["abcd"]["bondad"],
+            "claridad": config["abcd"]["claridad"],
+            "direccion": config["abcd"]["direccion"],
+        }
+
 
     # Genera la plantilla de prompt para hacer preguntas empáticas y secuenciales
     def generate_questions_prompt_template(self, data_collection):
@@ -145,3 +174,68 @@ class LLMConfig:
             "Tu respuesta debe ser un archivo JSON con una sola entrada llamada 'output_scenario'."
         )
         return main_prompt_template
+
+
+    # Genera la plantilla de prompt para hacer preguntas empáticas y secuenciales
+    def generate_abcd_prompt_template(self, followups, dim):
+        abcd_prompt = (
+            f"{followups['persona']}\n\n"
+            "Tu objetivo es recopilar respuestas estructuradas para las siguientes preguntas, "
+            "formulando cada una siempre con un preámbulo cálido y empático según las respuestas anteriores:\n\n"
+        )
+
+        for count, question in enumerate(followups[dim]["followups"]):
+            abcd_prompt += f"{count+1}. {question}\n"
+
+        abcd_prompt += (
+            "\nHaz cada pregunta de una en una. "
+            "No pongas los números de pregunta. "
+            "Siempre pon el texto de las preguntas en letra negrita. "
+            "Nunca pongas texto después del preámbulo y las preguntas. "
+            f"{followups['language_type']} "
+            "Recibe al menos una respuesta básica para cada pregunta antes de continuar. "
+            "Nunca repitas ni reformules preguntas anteriores. "
+            "Nunca respondas por la persona. "
+            "Si no estás seguro de lo que la persona quiso decir, vuelve a preguntar. "
+            f"{followups['topic_restriction']}"
+        )
+
+        n_questions = len(followups[dim]["followups"])
+        if n_questions == 1:
+            abcd_prompt += "\n\nUna vez que hayas recopilado la respuesta a la pregunta"
+        else:
+            abcd_prompt += f"\n\nUna vez que hayas recopilado las respuestas a las {n_questions} preguntas"
+
+        abcd_prompt += (
+            ', termina inmediatamente la conversación escribiendo únicamente la palabra "Gracias!".\n\n'
+            "Conversación actual:\n{history}\nHuman: {input}\nAI:"
+        )
+
+        return abcd_prompt
+    
+    # Genera la plantilla de prompt para hacer preguntas empáticas y secuenciales
+    def generate_reflect_prompt_template(self, data_collection):
+        reflect_prompt = (
+            f"{data_collection['persona']}\n\n"
+            "Tu objetivo es escuchar empáticamente a la persona abrir la indagación interna, y darle la siguiente instrucción, "
+            "formulandola siempre con un preámbulo cálido y empático según la respuesta anterior:\n\n"
+        )
+
+        reflect_prompt += f"{data_collection['instruction']}\n"
+
+        reflect_prompt += (
+            "\nNunca pongas texto después del preámbulo y la instrucción. "
+            f"{data_collection['language_type']} "
+            "Recibe al menos una respuesta básica antes de dar la instrucción. "
+            "Nunca respondas por la persona. "
+            f"{data_collection['topic_restriction']}"
+        )
+
+        reflect_prompt += "\n\nUna vez que hayas dado la instrucción y la persona haya escrito <Listo> "
+
+        reflect_prompt += (
+            ', termina inmediatamente la conversación escribiendo únicamente la palabra "Gracias!".\n\n'
+            "Conversación actual:\n{history}\nHuman: {input}\nAI:"
+        )
+
+        return reflect_prompt
