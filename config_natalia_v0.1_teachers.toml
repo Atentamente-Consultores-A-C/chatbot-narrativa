@@ -160,9 +160,11 @@ end_button = "Terminar ✅"
 
 [abcd.atencion]
 title = "Atención en desequilibrio"
-desc = """Cuando la atención se desequilibra, pierde presencia: se dispersa, se agita o se queda fija en algo.
-Es fácil fundirse con la emoción y actuar sin darse cuenta.
-¿Qué tanto estuvo presente en esa situación?"""
+desc = """Cuando la mente está fuera de balance en la atención, pierde presencia: se dispersa, se agita o se queda fija en algo.
+Puede estar distraída, como en piloto automático; agitada y reactiva, saltando de pensamiento en pensamiento; o enganchada en una idea o emoción que no puede soltar.
+En esos momentos, es fácil fundirse con la emoción, perder la calma y actuar sin darse cuenta.
+
+¿Qué tanto sientes que este desequilibrio de la atención estuvo presente en tu mente en esa situación?"""
 followups = [
   "Cuando recuerdas ese momento, ¿cómo se sentía tu atención? ¿Iba saltando de una cosa a otra, estaba muy agitada, o se quedó enganchada en algo que te costaba soltar? Cuéntame un poco cómo fue.",
   "¿Cómo afectó ese estado de tu atención la manera en que viviste la situación o reaccionaste ante ella?",
@@ -172,16 +174,17 @@ followups = [
 intro = """Gracias 🌾
 
 Aprecio que te hayas tomado un momento para observar eso.
-
 Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Atención**.
 
 Ya que recuerdas cómo estaba tu mente en ese momento, veamos cómo estaba funcionando tu atención."""
 
 [abcd.bondad]
 title = "Vínculos (Bondad) en desequilibrio"
-desc = """Cuando la bondad se desequilibra, la mente se cierra, cuesta ver al otro o tratarnos con amabilidad.
-Es fácil tomar las cosas personal y tensarse.
-¿Qué tanto estuvo presente?"""
+desc = """A veces, cuando la bondad se desequilibra, la mente se cierra.
+Nos enfocamos tanto en lo nuestro —lo que pensamos, sentimos o necesitamos— que cuesta ver el lado de la otra persona o tratarnos a nosotros mismos con amabilidad.
+Desde ese lugar es fácil tomar las cosas de forma personal, culpar, o sentirse solo y tenso, olvidando que los demás también quieren estar bien, igual que uno.
+
+¿Qué tanto sientes que este desequilibrio de la bondad estuvo presente en tu mente en esa situación?"""
 followups = [
   "En ese momento, ¿qué sentías hacia la otra persona (o hacia ti misma)? ¿Más enojo o molestia?, ¿ganas de que te entendieran?, ¿o simplemente cansancio y distancia? Cuéntame cómo se sintió eso.",
   "¿Cómo crees que esa forma de estar centrada en ti influyó en cómo viviste la situación o en lo que hiciste o dijiste?",
@@ -191,15 +194,17 @@ followups = [
 intro = """Gracias 🌿
 
 Aprecio que te hayas tomado un momento para reflexionar sobre lo ocurrido.
-
 Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Bondad**.
 
 Ya que recuerdas cómo estaba tu mente en ese momento, veamos un poco más cómo te estabas relacionando —contigo o con la otra persona— durante la situación."""
 
 [abcd.claridad]
 title = "Claridad en desequilibrio"
-desc = """Vemos las cosas de forma confusa o distorsionada: confundimos ideas con hechos, exageramos u omitimos parte de la realidad.
-¿Qué tanto estuvo presente?"""
+desc = """A veces, lo que más nos hace sufrir no es lo que pasa, sino cómo lo interpretamos.
+Cuando la claridad está en desequilibrio, vemos las cosas de forma confusa o distorsionada: confundimos nuestras ideas con los hechos, exageramos, o dejamos de ver parte de la realidad.
+Desde ahí, reaccionamos a interpretaciones más que a lo que realmente está ocurriendo.
+
+¿Qué tanto sientes que este desequilibrio de la claridad estuvo presente en tu mente en esa situación?"""
 followups = [
   "Cuando recuerdas esa situación, ¿cómo estabas viendo las cosas? ¿Podría ser que tu mente estuviera interpretando o dando por hecho algo que no era tan cierto, como si vieras una “serpiente” donde sólo había una cuerda? Por ejemplo, pensar que algo era permanente (“esto siempre será así”), o que alguien actuó con mala intención.",
   "¿Cómo influyó esa forma de ver la situación en lo que sentiste o hiciste? ¿Te llevó a reaccionar desde la confusión o el miedo, sin darte tiempo de ver con más luz o perspectiva?",
@@ -209,16 +214,17 @@ followups = [
 intro = """Gracias 🌱
 
 Aprecio que te hayas tomado un momento para observar tu experiencia.
-
 Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Claridad**.
 
 Ya que recuerdas cómo estaba tu mente en ese momento, veamos un poco más cómo estabas viendo las cosas."""
 
 [abcd.direccion]
 title = "Dirección y motivación en desequilibrio"
-desc = """Actuamos sin rumbo o desde el impulso, sin recordar qué es importante.
-Se pierde de vista el propósito y los valores.
-¿Qué tanto estuvo presente?"""
+desc = """A veces actuamos sin rumbo o desde un impulso, sin recordar qué es realmente importante para nosotros.
+Cuando la dirección está en desequilibrio, la mente se mueve sin claridad ni propósito: puede faltar motivación o energía, o por el contrario, estar atrapada en deseos o exigencias que no traen bienestar.
+Desde ahí, perdemos de vista nuestros valores y lo que da sentido a nuestras acciones.
+
+¿Qué tanto sientes que este desequilibrio de la dirección estuvo presente en tu mente en esa situación?"""
 followups = [
   "Cuando recuerdas ese momento, ¿qué dirías que te movía más: sentirte sin dirección, actuar por impulso o enfocarte en algo que parecía importante pero no te dio la paz que esperabas? Cuéntame cómo se sentía eso por dentro.",
   "¿Cómo afectó ese estado tu manera de actuar o decidir? ¿Te llevó a responder de una forma que no se alineaba con lo que valoras o con la persona que quieres ser?",
@@ -228,7 +234,6 @@ followups = [
 intro = """Gracias 🌾
 
 Aprecio que te hayas tomado un momento para reflexionar.
-
 Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Dirección y motivación**.
 
 Ya que recuerdas cómo estaba tu mente en ese momento, veamos un poco más qué te movía internamente."""
