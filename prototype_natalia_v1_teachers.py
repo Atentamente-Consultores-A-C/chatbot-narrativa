@@ -64,11 +64,11 @@ def init_session():
         'consent': False,             # Controla si el usuario aceptó el consentimiento
         'exp_data': True,             # Controla si se expande la conversación
         'llm_model': "gpt-4.1-mini",  # Modelo LLM
-        'final_response': None,       # Almacena la narrativa final elegida/editada
+        'primer_porque': None,       # Almacena la primera narrativa final elegida/editada
+        'segundo_porque': None,       # Almacena la segunda narrativa final elegida/editada
         'waiting_for_listo': True,    # Controla el paso previo a iniciar generación
         'micronarrativas': [],        # Guarda las 3 narrativas generadas
         'vista_final': False,         # Determina si ya se muestra la narrativa final
-        'usar_sugerida': False,       # Permite usar la narrativa adaptada sugerida
         'ai_used': False,             # Permite mostrar o no el chat input del recuadro de mejora con IA
         'abcd_top': "atencion",
         'abcd_ratings': { "atencion": 3, "bondad": 3, "claridad": 3, "direccion": 3},
@@ -106,12 +106,12 @@ if not st.session_state.consent:
         st.button("He leído, entiendo", key="consent_button", on_click=lambda: st.session_state.update({"consent": True}))
     st.stop()  # Detiene ejecución hasta aceptar
 
-# === FLUJO: PANTALLA FINAL SI YA EXISTE NARRATIVA ===
+# === FLUJO: PANTALLA FINAL ===
 if st.session_state.vista_final:
     st.markdown("#### Has llegado al final de la creación de tu narrativa con nuestro chatbot para maestros y maestras")
     st.markdown("**Tu narrativa se guardó correctamente**. Esperamos que este ejercicio te haya ayudado a ver tu situación con más claridad. Si deseas guardarla para ti, copia el texto antes de salir, porque aquí se borrará. Recuerda que tu información es confidencial y no será compartida con nadie.  \n")
     st.markdown("Esta es la narrativa final que elegiste o editaste:")
-    st.markdown(f"> {st.session_state.final_response}")
+    st.markdown(f"> {st.session_state.primer_porque}")
 
     st.markdown("##### 🎉 ¡Gracias por participar! ")
 
@@ -207,7 +207,7 @@ if st.session_state.agentState == "select_micronarrative":
             )
             # Botón para seleccionar narrativa
             if st.button("Elegir versión", key=f"elegir_col_{idx}"):
-                st.session_state.final_response = texto
+                st.session_state.primer_porque = texto
                 st.session_state.agentState = "summarise"
                 st.success("Narrativa seleccionada.")
                 st.rerun()
@@ -335,29 +335,23 @@ elif not st.session_state.agentState in ("summarise", "select_micronarrative", "
                 st.rerun()
 
 # === FLUJO: RESUMEN Y EDICIÓN FINAL ===
-if st.session_state.agentState == "summarise" and st.session_state.final_response:
+if st.session_state.agentState == "summarise" and st.session_state.primer_porque:
     st.subheader("📄 Tu historia en tus propias palabras")
+    st.markdown("Ha llegado la hora de personalizar aún más tu narrativa.")
     guardar_final = False
 
-    # Si se usa la sugerida automáticamente, se guarda
-    if st.session_state.usar_sugerida:
-        new_text = st.session_state.final_response
-        st.session_state.usar_sugerida = False
-        guardar_final = True
-    else:
-        # Usuario puede editar la narrativa final
-        new_text = st.text_area("✍️ Aquí puedes editar lo que quieras, para que quede más claro lo que estás viviendo. \n Si quieres hacer cambios con la Inteligencia Artificial, puedes hacerlo abajo. Si no, puedes guardar la versión final dando clic al botón \"Guardar versión final\".", value=st.session_state.final_response, height=250)
-
     # === OPCIÓN DE MEJORA CON IA ===
-    st.subheader("✨ ¿Quieres mejorar tu narrativa con ayuda de la Inteligencia Artificial?")
+    st.markdown("##### ✨ ¿Quieres mejorar tu narrativa con ayuda de la Inteligencia Artificial?")
     st.markdown("Si lo deseas, aquí le puedes pedir a la Inteligencia Artificial que te ayude a cambiar el texto.  \n"
                 "**Por ejemplo:** puedes pedirle que te ayude a agregar lo que falte, quitar lo que no quieras o cambiar el tono.")
     with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
-        st.markdown("Aquí puedes refinar la narrativa que elegiste.")
+        first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.primer_porque}\n\n")
+        st.markdown(first_ai_message)
+        st.markdown("Los cambios que hagas se guardarán en la caja de texto de abajo, donde podrás editar manualmente en el momento que quieras.")
 
         # Inicializa variables de sesión para este subchat
         if "adapted_response" not in st.session_state:
-            st.session_state.adapted_response = st.session_state.final_response
+            st.session_state.adapted_response = st.session_state.primer_porque
         if "adaptation_messages" not in st.session_state:
             st.session_state.adaptation_messages = []
 
@@ -392,22 +386,26 @@ if st.session_state.agentState == "summarise" and st.session_state.final_respons
 
             ai_message = (f"**Versión sugerida:**\n\n> {st.session_state.adapted_response}\n\n"
                             "Si ya ves bien esta versión, **guárdala con el botón de abajo**.\n\n"
-                            "Si no, puedes seguir editando con IA.")
+                            "Si no, puedes seguir editando con IA o manualmente con el cuadro de texto de abajo.")
             st.session_state.adaptation_messages.append({"role": "ai", "content": ai_message})
             with st.chat_message("ai"):
                 st.markdown(ai_message)
             st.rerun()
+    
+    st.markdown("\n\n\n\n")
+    # Usuario puede editar la narrativa final
+    new_text = st.text_area("✍️ Aquí puedes editar manualmente lo que quieras, para que quede más claro lo que estás viviendo.\n\nSi quieres hacer más cambios con la Inteligencia Artificial, puedes hacerlo arriba y se irán reflejando aquí.\n\nSi no, puedes guardar la versión final dando clic al botón \"Guardar versión final\".", value=st.session_state.adapted_response, height=250)
+    st.session_state.adapted_response = new_text
 
     # === BOTÓN DE GUARDADO FINAL (después de la sección de IA) ===
-    if not st.session_state.usar_sugerida:
-        if st.button("✅ Guardar versión final"):
+    if st.button("✅ Guardar versión final"):
             guardar_final = True
 
     # Guarda en Google Sheets y pasa a vista final
     if guardar_final:
         if st.session_state.ai_used:
             new_text = st.session_state.adapted_response
-        st.session_state.final_response = new_text
+        st.session_state.primer_porque = new_text
 
         try:
             sheet.append_row([new_text, datetime.now().isoformat()])
