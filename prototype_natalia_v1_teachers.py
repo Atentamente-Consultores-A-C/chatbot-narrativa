@@ -60,7 +60,7 @@ smith_client = Client()  # Cliente para LangSmith (trazabilidad y debugging)
 def init_session():
     defaults = {
         'run_id': None,
-        'agentState': 'start',        # Estado de la conversación (start → chat → select_micronarrative → summarise1 → reflect → sliders → abcd → summarise2)
+        'agentState': 'start',        # Estado de la conversación (start → chat → select_micronarrative → summarise1 → reflect → sliders → abcd → summarise2 → end)
         'consent': False,             # Controla si el usuario aceptó el consentimiento
         'summarise1': False,
         'reflect': False,
@@ -73,8 +73,10 @@ def init_session():
         'segundo_porque': None,       # Almacena la segunda narrativa final elegida/editada
         'waiting_for_listo': True,    # Controla el paso previo a iniciar generación
         'micronarrativas': [],        # Guarda las 3 narrativas generadas
+        'persona_elegida_idx': 4,
         'vista_final': False,         # Determina si ya se muestra la narrativa final
         'ai_used': False,             # Permite mostrar o no el chat input del recuadro de mejora con IA
+        'ai_used2': False,             # Permite mostrar o no el chat input del recuadro de mejora con IA
         'abcd_tie_options': [],
         'await_pick_top': False,
         'abcd_top': "atencion",
@@ -117,8 +119,11 @@ if not st.session_state.consent:
 if st.session_state.vista_final:
     st.markdown("#### Has llegado al final de la creación de tu narrativa con nuestro chatbot para maestros y maestras")
     st.markdown("**Tu narrativa se guardó correctamente**. Esperamos que este ejercicio te haya ayudado a ver tu situación con más claridad. Si deseas guardarla para ti, copia el texto antes de salir, porque aquí se borrará. Recuerda que tu información es confidencial y no será compartida con nadie.  \n")
-    st.markdown("Esta es la narrativa final que elegiste o editaste:")
+    st.markdown("Esta es la narrativa final de la situación:")
     st.markdown(f"> {st.session_state.primer_porque}")
+
+    st.markdown("Pero esa no es la historia completa.\nEsto es lo que estaba pasando en tu mente realmente:")
+    st.markdown(f"> {st.session_state.segundo_porque}")
 
     st.markdown("##### 🎉 ¡Gracias por participar! ")
 
@@ -163,7 +168,7 @@ elif not st.session_state.vista_final:
         lp_intro = llm_prompts.d_intro
 
     # === FLUJO: MOSTRAR HISTORIAL DE CONVERSACIÓN ===
-    entry_messages_questions = st.expander("🗣️ Conversación", expanded=st.session_state['exp_data'])
+    entry_messages_questions = st.expander("🗣️ Tus experiencias", expanded=st.session_state['exp_data'])
     if not msgs_questions.messages:
             msgs_questions.add_ai_message(llm_prompts.questions_intro)  # Primer mensaje del bot
     with entry_messages_questions:
@@ -258,13 +263,14 @@ elif not st.session_state.vista_final:
                 )
                 # Botón para seleccionar narrativa
                 if st.button("Elegir versión", key=f"elegir_col_{idx}"):
+                    st.session_state.persona_elegida_idx = idx
                     st.session_state.primer_porque = texto
                     st.session_state.summarise1 = True
                     st.session_state.agentState = "summarise1"
                     st.success("Narrativa seleccionada.")
                     st.rerun()
 
-    # === FLUJO: RESUMEN Y EDICIÓN FINAL ===
+    # === FLUJO: RESUMEN Y EDICIÓN 1 ===
     if st.session_state.summarise1 and st.session_state.primer_porque:
         st.subheader("📄 Tu historia en tus propias palabras")
         st.markdown("Ha llegado la hora de personalizar aún más tu narrativa.")
@@ -349,7 +355,7 @@ elif not st.session_state.vista_final:
     
     if st.session_state.reflect:
 
-        entry_messages_reflect = st.expander("🗣️ Conversación", expanded=st.session_state['exp_data'])
+        entry_messages_reflect = st.expander("🗣️ Tu reflexión", expanded=st.session_state['exp_data'])
         if not msgs_reflect.messages:
                 msgs_reflect.add_ai_message(llm_prompts.reflect_intro)  # Primer mensaje del bot
         with entry_messages_reflect:
@@ -363,12 +369,18 @@ elif not st.session_state.vista_final:
                 with entry_messages_reflect:
                     st.chat_message("human").markdown(f"<span style='color:black'>{prompt_reflect}</span>", unsafe_allow_html=True)
 
+                    reflect_prompt_complete = (
+                        "Esta es la experiencia de una persona:\n\n"
+                        f"< {st.session_state.primer_porque} >\n\n"
+                        f"{llm_prompts.reflect_prompt_template}\n\n"
+                    )
+
                     # Cadena principal del chat
                     conversation_reflect = LLMChain(
                         llm=chat,
                         prompt=PromptTemplate(
                             input_variables=["history", "input"],
-                            template=llm_prompts.reflect_prompt_template
+                            template=reflect_prompt_complete
                         ),
                         memory=memory_reflect,
                         verbose=True
@@ -474,7 +486,7 @@ elif not st.session_state.vista_final:
     
     if st.session_state.abcd:
 
-        entry_messages_abcd = st.expander("🗣️ Conversación", expanded=st.session_state['exp_data'])
+        entry_messages_abcd = st.expander("🗣️ Los desequilibrios en la mente", expanded=st.session_state['exp_data'])
         if not msgs_abcd.messages:
                 msgs_abcd.add_ai_message(lp_intro)  # Primer mensaje del bot
         with entry_messages_abcd:
@@ -509,9 +521,121 @@ elif not st.session_state.vista_final:
                         final_message += llm_prompts.abcd_outro
                     st.chat_message("ai").markdown(f"<span style='color:black'>{final_message}</span>", unsafe_allow_html=True)
 
-                    # === GENERACIÓN DE MICRONARRATIVAS ===
+                    msgs_joined = StreamlitChatMessageHistory(key="joined_messages")
+                    for m in msgs_reflect.messages:
+                        if m.type == "ai":
+                            msgs_joined.add_ai_message(m.content)
+                        elif m.type == "human":
+                            msgs_joined.add_user_message(m.content)
+                    for m in msgs_abcd.messages:
+                        if m.type == "ai":
+                            msgs_joined.add_ai_message(m.content)
+                        elif m.type == "human":
+                            msgs_joined.add_user_message(m.content)
+
+                    # === GENERACIÓN DE MICRONARRATIVA ===
                     if "Gracias!" in response['text']:
+                        summary_prompt = PromptTemplate.from_template(llm_prompts.second_why_prompt)
+                        parser = SimpleJsonOutputParser()
+                        chain = summary_prompt | chat | parser
+                        full_history = "\n".join([f"{m.type.upper()}: {m.content}" for m in msgs_joined.messages])
+                        summary_input = {key: full_history for key in llm_prompts.summary_keys}
+
+                        # Genera una narrativa por la misma personalidad elegida previamente
+                        with st.spinner(f"💭 Generando narrativa"):
+                            result = chain.invoke({
+                                "persona": llm_prompts.personas[st.session_state.persona_elegida_idx],
+                                "one_shot": llm_prompts.one_shot,
+                                "context": st.session_state.primer_porque,
+                                **summary_input
+                            })
+                        st.session_state.segundo_porque = result['output_scenario']
                         # Cambia de estado
-                        st.session_state.vista_final = True
+                        #st.session_state.vista_final = True
+                        st.session_state.summarise2 = True
+                        st.session_state.agentState = "summarise2"
 
                         st.rerun()
+    
+    # === FLUJO: RESUMEN Y EDICIÓN 2 ===
+    if st.session_state.summarise2 and st.session_state.segundo_porque:
+        st.subheader("📄 Tu reflexión en tus propias palabras")
+        st.markdown("Ha llegado la hora de personalizar aún más tu experiencia interna.")
+        guardar_final2 = False
+
+        # === OPCIÓN DE MEJORA CON IA ===
+        st.markdown("##### ✨ ¿Quieres mejorar tu reflexión con ayuda de la Inteligencia Artificial?")
+        st.markdown("Si lo deseas, aquí le puedes pedir a la Inteligencia Artificial que te ayude a cambiar el texto.  \n"
+                    "**Por ejemplo:** puedes pedirle que te ayude a agregar lo que falte, quitar lo que no quieras o cambiar el tono.")
+        with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
+            first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.segundo_porque}\n\n")
+            st.markdown(first_ai_message)
+            st.markdown("Los cambios que hagas se guardarán en la caja de texto de abajo, donde podrás editar manualmente en el momento que quieras.")
+
+            # Inicializa variables de sesión para este subchat
+            if "adapted_response2" not in st.session_state:
+                st.session_state.adapted_response2 = st.session_state.segundo_porque
+            if "adaptation_messages2" not in st.session_state:
+                st.session_state.adaptation_messages2 = []
+
+            # Mostrar historial de mejoras
+            for m in st.session_state.adaptation_messages2:
+                with st.chat_message(m["role"]):
+                    st.markdown(m["content"])
+
+            adaptation_input2 = st.chat_input("Escribe cómo quieres mejorar tu reflexión...")
+            if adaptation_input2:
+                st.session_state.adaptation_messages2.append({"role": "human", "content": adaptation_input2})
+                with st.chat_message("human"):
+                    st.markdown(adaptation_input2)
+
+                st.session_state.ai_used2 = True
+                # Prompt para adaptar narrativa sobre la última versión
+                adaptation_prompt = PromptTemplate(
+                    input_variables=["input", "scenario"],
+                    template=llm_prompts.extraction_adaptation_prompt_template
+                )
+                parser = SimpleJsonOutputParser()
+                chain = adaptation_prompt | chat | parser
+
+                with st.spinner("💭 Generando versión mejorada..."):
+                    improved = chain.invoke({
+                        "scenario": st.session_state.adapted_response2,
+                        "input": adaptation_input2
+                    })
+
+                # Actualiza narrativa adaptada
+                st.session_state.adapted_response2 = improved["new_scenario"]
+
+                ai_message = (f"**Versión sugerida:**\n\n> {st.session_state.adapted_response2}\n\n"
+                                "Si ya ves bien esta versión, **guárdala con el botón de abajo**.\n\n"
+                                "Si no, puedes seguir editando con IA o manualmente con el cuadro de texto de abajo.")
+                st.session_state.adaptation_messages2.append({"role": "ai", "content": ai_message})
+                with st.chat_message("ai"):
+                    st.markdown(ai_message)
+                st.rerun()
+        
+        st.markdown("\n\n\n\n")
+        # Usuario puede editar la narrativa final
+        new_text = st.text_area("✍️ Aquí puedes editar manualmente lo que quieras, para que quede más claro lo que estás viviendo.\n\nSi quieres hacer más cambios con la Inteligencia Artificial, puedes hacerlo arriba y se irán reflejando aquí.\n\nSi no, puedes guardar la versión final dando clic al botón \"Guardar versión final\".", value=st.session_state.adapted_response2, height=250)
+        st.session_state.adapted_response2 = new_text
+
+        # === BOTÓN DE GUARDADO FINAL (después de la sección de IA) ===
+        if st.session_state.agentState == "summarise2":
+            if st.button("✅ Guardar versión final"):
+                    guardar_final2 = True
+
+        # Guarda en Google Sheets y pasa a vista final
+        if guardar_final2:
+            if st.session_state.ai_used2:
+                new_text = st.session_state.adapted_response2
+            st.session_state.segundo_porque = new_text
+
+            try:
+                sheet.append_row([new_text, datetime.now().isoformat()])
+            except Exception as e:
+                st.error(f"❌ Error al guardar en Google Sheets: {e}")
+            
+            st.session_state.vista_final = True
+            st.session_state.agentState = "end"
+            st.rerun()

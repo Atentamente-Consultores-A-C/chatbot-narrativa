@@ -41,6 +41,9 @@ class LLMConfig:
         # Plantilla principal para generar la narrativa final
         self.main_prompt_template = self.generate_main_prompt_template(config["summaries"]["questions"])
 
+        # Plantilla principal para generar la narrativa final
+        self.second_why_prompt = self.generate_2nd_why_prompt_template(config["summaries"]["questions"])
+
         # Prompt de inicio y plantilla para reflexión e inicio de etapa ABCD
         self.reflect_intro = config["reflect"]["intro"].strip()
         self.reflect_prompt_template = self.generate_reflect_prompt_template(config["reflect"])
@@ -174,6 +177,25 @@ class LLMConfig:
             "Tu respuesta debe ser un archivo JSON con una sola entrada llamada 'output_scenario'."
         )
         return main_prompt_template
+    
+    # Genera la plantilla principal para crear la narrativa final en JSON con 'output_scenario'
+    def generate_2nd_why_prompt_template(self, questions):
+        main_prompt_template = "{persona}\n\n"
+        main_prompt_template += "{one_shot}\n\n"
+        main_prompt_template += "Tu tarea:\nCrea un escenario basado en las siguientes respuestas:\n\n"
+
+        for key, question in questions.items():
+            main_prompt_template += f"Pregunta: {question}\n"
+            main_prompt_template += f"Respuesta: {{{key}}}\n"
+
+        main_prompt_template += "Crea un escenario basado en estas respuestas.\n\n"
+
+        main_prompt_template += "Un poco de contexto sobre la situación de esta persona:\n\n"
+        main_prompt_template += "< {context} >\n\n"
+        main_prompt_template += (
+            "Tu respuesta debe ser un archivo JSON con una sola entrada llamada 'output_scenario'."
+        )
+        return main_prompt_template
 
 
     # Genera la plantilla de prompt para hacer preguntas empáticas y secuenciales
@@ -217,11 +239,11 @@ class LLMConfig:
     def generate_reflect_prompt_template(self, data_collection):
         reflect_prompt = (
             f"{data_collection['persona']}\n\n"
-            "Tu objetivo es escuchar empáticamente a la persona abrir la indagación interna, y darle la siguiente instrucción, "
+            "Tu objetivo es escuchar empáticamente a la persona abrir la indagación interna acerca de esa situación, y darle la siguiente instrucción, "
             "formulandola siempre con un preámbulo cálido y empático según la respuesta anterior:\n\n"
         )
 
-        reflect_prompt += f"{data_collection['instruction']}\n"
+        reflect_prompt += f"< {data_collection['instruction']} >\n"
 
         reflect_prompt += (
             "\nNunca pongas texto después del preámbulo y la instrucción. "
