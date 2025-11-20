@@ -75,6 +75,8 @@ def init_session():
         'micronarrativas': [],        # Guarda las 3 narrativas generadas
         'vista_final': False,         # Determina si ya se muestra la narrativa final
         'ai_used': False,             # Permite mostrar o no el chat input del recuadro de mejora con IA
+        'abcd_tie_options': [],
+        'await_pick_top': False,
         'abcd_top': "atencion",
         'abcd_ratings': { "atencion": 3, "bondad": 3, "claridad": 3, "direccion": 3},
     }
@@ -419,7 +421,24 @@ elif not st.session_state.vista_final:
         render_dim("claridad", "claridad", c3)
         render_dim("direccion", "direccion", c4)
 
-        st.markdown("")  # pequeño espacio
+        st.markdown("\n\n")  # pequeño espacio
+
+        if st.session_state.await_pick_top and st.session_state.abcd_tie_options:
+            st.info("Hay más de un desequilibrio con la calificación más alta.\n\nPor favor, elige en cuál quisieras profundizar:")
+            opts = st.session_state.abcd_tie_options
+            cols = st.columns(len(opts))
+            for col, k in zip(cols, opts):
+                with col:
+                    title = llm_prompts.abcd_dims[k]["title"].replace(" en desequilibrio", "")
+                    if st.button(title, key=f"pick_{k}"):
+                        st.session_state.abcd_top = k
+                        st.session_state.abcd = True
+                        st.session_state.agentState = "abcd"
+                        st.session_state.await_pick_top = False
+                        st.session_state.abcd_tie_options = []
+                        st.success(f"Profundizaremos en: {title}")
+                        st.rerun()
+            st.stop()
         
         if st.session_state.agentState == "sliders":
             if st.button("Guardar y continuar ➡️"):
@@ -429,13 +448,29 @@ elif not st.session_state.vista_final:
                         "claridad":  int(st.session_state.abcd_ratings["claridad"] or 0),
                         "direccion": int(st.session_state.abcd_ratings["direccion"] or 0),
                     }
-                order = llm_prompts.abcd_ui["tie_break_order"]
-                st.session_state.abcd_top = max(order, key=lambda k: (r[k], -order.index(k)))
+                
+                max_val = max(r.values())
+                empate = [k for k, v in r.items() if v == max_val]
 
-                st.session_state.abcd = True
-                st.session_state.agentState = "abcd"
-                st.success("Calificaciones guardadas")
-                st.rerun()
+                if len(empate) == 1:
+                    st.session_state.abcd_top = empate[0]
+                    st.session_state.abcd = True
+                    st.session_state.agentState = "abcd"
+                    st.success("Calificaciones guardadas")
+                    st.rerun()
+                else:
+                    # Caso con empate: guardar opciones y pedir elección
+                    st.session_state.abcd_tie_options = empate
+                    st.session_state.await_pick_top = True
+                    st.rerun()
+
+                # order = llm_prompts.abcd_ui["tie_break_order"]
+                # st.session_state.abcd_top = max(order, key=lambda k: (r[k], -order.index(k)))
+
+                # st.session_state.abcd = True
+                # st.session_state.agentState = "abcd"
+                # st.success("Calificaciones guardadas")
+                # st.rerun()
     
     if st.session_state.abcd:
 
