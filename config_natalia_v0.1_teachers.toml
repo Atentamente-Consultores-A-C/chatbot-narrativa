@@ -15,12 +15,12 @@
 
 [consent]
 intro_and_consent = """## ¡Bienvenido/a a nuestro chatbot para maestros y maestras!
-Vas a interactuar con un chatbot que, a través de algunas preguntas, te ayudará a darle forma a lo que estás viviendo y a crear una narrativa con tus propias palabras.
+Vas a interactuar con un chatbot que, a través de algunas preguntas, te ayudará a tener más claridad de lo que estás viviendo y aplicar lo que has aprendido en tu curso de AtentaMente.
 Esta información nos servirá para, muy pronto, generar recursos y recomendaciones que te apoyen en tu día a día como docente.
 
-👉 **No compartas información personal (como tu nombre completo, dirección, etc.).**
+Te aseguramos que tu información se mantendrá confidencial y sólo la verán los miembros del equipo de AtentaMente, con fin de seguir mejorando los recursos que te podemos dar.
 
-👉 **Responde con confianza y en tus propias palabras**
+👉 **Por favor, lee este documento de consentimiento antes de avanzar y si estás de acuerdo, podemos seguir.**
 """
 
 ###  Esta sección configura el bot de recopilación de datos. ###
@@ -31,15 +31,15 @@ language_type = """
 Utiliza un lenguaje empático y amigable en tus comentarios generales, pero mantén las respuestas y comentarios previos a las preguntas breves (máximo dos oraciones). Formula las preguntas exactamente como están escritas aquí.
 """
 intro = """
-Hola -- Estoy recopilando historias sobre experiencias desafiantes en clases para ayudar a nuestros maestros y maestras. Me encantaría que compartieras tu experiencia conmigo respondiendo algunas preguntas.
-Estas preguntas son para poder comprender mejor tu situación y cómo te sientes al respecto. **Por favor, escribe "listo" para continuar.**
+Hola -- Quiero ayudarte a comprender mejor la situación que estás viviendo y a aplicar lo que has aprendido en tu curso para que puedas sentirte mejor.
+Para empezar, te haré algunas preguntas con el fin de entender con mayor claridad lo que está ocurriendo.
+Poco a poco profundizaremos para identificar qué te está causando sufrimiento, observar cómo funciona tu mente y recordar las prácticas que pueden ayudarte. **Por favor, escribe "listo" para continuar.**
 """
 questions = [
    "¿Qué aspecto de tu trabajo como educador ó educadora te resulta más difícil en este momento?",
    "¿Puedes describir una situación reciente que lo ejemplifique?",
    "¿Hay más detalles que me quieras contar para entender mejor la situación?",
    "¿Qué emociones te generó esta situación y cómo actuaste ante ellas?",
-   "¿Me podrías contar qué sentiste en el cuerpo y qué pensamientos tuviste en ese momento?",
    "¿Qué parte de esta situación te ha sido más difícil de manejar?",
 ]
 topic_restriction = """
@@ -166,7 +166,7 @@ En esos momentos, es fácil fundirse con la emoción, perder la calma y actuar s
 
 ¿Qué tanto sientes que este desequilibrio de la atención estuvo presente en tu mente en esa situación?"""
 followups = [
-  "Cuando recuerdas ese momento, ¿cómo se sentía tu atención? ¿Iba saltando de una cosa a otra, estaba muy agitada, o se quedó enganchada en algo que te costaba soltar? Cuéntame un poco cómo fue.",
+  "¿Cómo se sentía tu atención? ¿Iba saltando de una cosa a otra, estaba muy agitada, o se quedó enganchada en algo que te costaba soltar? Cuéntame un poco cómo fue.",
   "¿Cómo afectó ese estado de tu atención la manera en que viviste la situación o reaccionaste ante ella?",
   "¿Hay algo que crees que dejaste de ver o de sentir al estar en ese estado? Por ejemplo, tu calma, tu claridad o la posibilidad de responder con más equilibrio.",
   "Si volvieras a vivir algo parecido, ¿cómo podrías darte cuenta de que tu atención está fuera de balance y que necesitas hacer una pausa o volver al presente?"
@@ -176,9 +176,7 @@ intro = """Gracias 🌾
 Aprecio que te hayas tomado un momento para observar eso.
 Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Atención**.
 
-Ya que recuerdas cómo estaba tu mente en ese momento, veamos cómo estaba funcionando tu atención.
-
-Escribe "listo" para continuar."""
+Ya que recuerdas cómo estaba tu mente en ese momento, **¿cómo se sentía tu atención? ¿Iba saltando de una cosa a otra, estaba muy agitada, o se quedó enganchada en algo que te costaba soltar? Cuéntame un poco cómo fue.**"""
 
 [abcd.bondad]
 title = "Vínculos (Bondad) en desequilibrio"
@@ -188,7 +186,7 @@ Desde ese lugar es fácil tomar las cosas de forma personal, culpar, o sentirse 
 
 ¿Qué tanto sientes que este desequilibrio de la bondad estuvo presente en tu mente en esa situación?"""
 followups = [
-  "En ese momento, ¿qué sentías hacia la otra persona (o hacia ti misma)? ¿Más enojo o molestia?, ¿ganas de que te entendieran?, ¿o simplemente cansancio y distancia? Cuéntame cómo se sintió eso.",
+  "¿Qué sentías hacia la otra persona (o hacia ti misma)? ¿Más enojo o molestia?, ¿ganas de que te entendieran?, ¿o simplemente cansancio y distancia? Cuéntame cómo se sintió eso.",
   "¿Cómo crees que esa forma de estar centrada en ti influyó en cómo viviste la situación o en lo que hiciste o dijiste?",
   "¿Hay algo que crees que dejaste de ver o de sentir al estar así? Por ejemplo, que la otra persona también buscaba estar bien, o que tú merecías comprensión y cuidado.",
   "Si volvieras a vivir algo parecido, ¿cómo podrías darte cuenta de que tu corazón se está cerrando o que estás dejando de ver al otro (o a ti misma) con amabilidad, y que es momento de hacer una pausa para volver a conectar?"
@@ -198,9 +196,7 @@ intro = """Gracias 🌿
 Aprecio que te hayas tomado un momento para reflexionar sobre lo ocurrido.
 Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Bondad**.
 
-Ya que recuerdas cómo estaba tu mente en ese momento, veamos un poco más cómo te estabas relacionando —contigo o con la otra persona— durante la situación.
-
-Escribe "listo" para continuar."""
+Ya que recuerdas cómo estaba tu mente en ese momento, **¿qué sentías hacia la otra persona (o hacia ti misma)? ¿Más enojo o molestia?, ¿ganas de que te entendieran?, ¿o simplemente cansancio y distancia? Cuéntame cómo se sintió eso.**."""
 
 [abcd.claridad]
 title = "Claridad en desequilibrio"
@@ -210,7 +206,7 @@ Desde ahí, reaccionamos a interpretaciones más que a lo que realmente está oc
 
 ¿Qué tanto sientes que este desequilibrio de la claridad estuvo presente en tu mente en esa situación?"""
 followups = [
-  "Cuando recuerdas esa situación, ¿cómo estabas viendo las cosas? ¿Podría ser que tu mente estuviera interpretando o dando por hecho algo que no era tan cierto, como si vieras una “serpiente” donde sólo había una cuerda? Por ejemplo, pensar que algo era permanente (“esto siempre será así”), o que alguien actuó con mala intención.",
+  "¿Cómo estabas viendo las cosas? ¿Podría ser que tu mente estuviera interpretando o dando por hecho algo que no era tan cierto, como si vieras una “serpiente” donde sólo había una cuerda? Por ejemplo, pensar que algo era permanente (“esto siempre será así”), o que alguien actuó con mala intención.",
   "¿Cómo influyó esa forma de ver la situación en lo que sentiste o hiciste? ¿Te llevó a reaccionar desde la confusión o el miedo, sin darte tiempo de ver con más luz o perspectiva?",
   "¿Hay algo que ahora ves con más claridad y que en ese momento no notabas? Tal vez algo que malinterpretaste, un detalle que ignoraste o una posibilidad que pasó desapercibida.",
   "Si volvieras a vivir algo parecido, ¿cómo podrías darte cuenta de que tu mente está “viendo serpientes” —es decir, confundiendo interpretaciones con realidad—, y que es momento de hacer una pausa antes de reaccionar?"
@@ -220,9 +216,7 @@ intro = """Gracias 🌱
 Aprecio que te hayas tomado un momento para observar tu experiencia.
 Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Claridad**.
 
-Ya que recuerdas cómo estaba tu mente en ese momento, veamos un poco más cómo estabas viendo las cosas.
-
-Escribe "listo" para continuar."""
+Ya que recuerdas cómo estaba tu mente en ese momento, **¿cómo estabas viendo las cosas? ¿Podría ser que tu mente estuviera interpretando o dando por hecho algo que no era tan cierto, como si vieras una “serpiente” donde sólo había una cuerda? Por ejemplo, pensar que algo era permanente (“esto siempre será así”), o que alguien actuó con mala intención.**"""
 
 [abcd.direccion]
 title = "Dirección y motivación en desequilibrio"
@@ -232,7 +226,7 @@ Desde ahí, perdemos de vista nuestros valores y lo que da sentido a nuestras ac
 
 ¿Qué tanto sientes que este desequilibrio de la dirección estuvo presente en tu mente en esa situación?"""
 followups = [
-  "Cuando recuerdas ese momento, ¿qué dirías que te movía más: sentirte sin dirección, actuar por impulso o enfocarte en algo que parecía importante pero no te dio la paz que esperabas? Cuéntame cómo se sentía eso por dentro.",
+  "¿Qué dirías que te movía más: sentirte sin dirección, actuar por impulso o enfocarte en algo que parecía importante pero no te dio la paz que esperabas? Cuéntame cómo se sentía eso por dentro.",
   "¿Cómo afectó ese estado tu manera de actuar o decidir? ¿Te llevó a responder de una forma que no se alineaba con lo que valoras o con la persona que quieres ser?",
   "Si lo miras ahora con calma, ¿hay algo que ahora reconoces que habías dejado de lado o perdido de vista en ese momento? Tal vez tu propósito como docente, tus valores, o la intención de cuidar tanto de ti como de los demás.",
   "Si volvieras a vivir algo parecido, ¿cómo podrías darte cuenta de que estás actuando sin dirección o desde una motivación que no te hace bien, y que es momento de hacer una pausa para recordar qué es realmente importante para ti?"
@@ -242,6 +236,4 @@ intro = """Gracias 🌾
 Aprecio que te hayas tomado un momento para reflexionar.
 Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Dirección y motivación**.
 
-Ya que recuerdas cómo estaba tu mente en ese momento, veamos un poco más qué te movía internamente.
-
-Escribe "listo" para continuar."""
+Ya que recuerdas cómo estaba tu mente en ese momento, **¿qué dirías que te movía más: sentirte sin dirección, actuar por impulso o enfocarte en algo que parecía importante pero no te dio la paz que esperabas? Cuéntame cómo se sentía eso por dentro.**"""

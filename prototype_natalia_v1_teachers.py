@@ -1,7 +1,7 @@
 import streamlit as st
 
 # === CONFIGURACIÓN INICIAL DE LA APP ===
-st.set_page_config(page_title="Study bot", page_icon="📖")  # Configura título y favicon
+st.set_page_config(page_title="Amiga Atenta", page_icon="📖")  # Configura título y favicon
 st.image("atentamente_logo.svg")  # Muestra logo del proyecto
 
 import os
@@ -112,7 +112,7 @@ chat = ChatOpenAI(temperature=0.3, model=st.session_state.llm_model, openai_api_
 if not st.session_state.consent:
     with st.container():
         st.markdown(llm_prompts.intro_and_consent)  # Texto inicial desde TOML
-        st.button("He leído, entiendo", key="consent_button", on_click=lambda: st.session_state.update({"consent": True}))
+        st.button("He leído, estoy de acuerdo", key="consent_button", on_click=lambda: st.session_state.update({"consent": True}))
     st.stop()  # Detiene ejecución hasta aceptar
 
 # === FLUJO: PANTALLA FINAL ===
@@ -199,8 +199,8 @@ elif not st.session_state.vista_final:
 
                 final_message = response['text']
                 # Si llega el trigger "Gracias!" pasa a generación de micronarrativas
-                if "Gracias!" in final_message:
-                    final_message += " A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar."
+                # if "Gracias!" in final_message:
+                #     final_message += " A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar."
 
                 st.chat_message("ai").markdown(f"<span style='color:black'>{final_message}</span>", unsafe_allow_html=True)
 
@@ -330,12 +330,12 @@ elif not st.session_state.vista_final:
         
         st.markdown("\n\n\n\n")
         # Usuario puede editar la narrativa final
-        new_text = st.text_area("✍️ Aquí puedes editar manualmente lo que quieras, para que quede más claro lo que estás viviendo.\n\nSi quieres hacer más cambios con la Inteligencia Artificial, puedes hacerlo arriba y se irán reflejando aquí.\n\nSi no, puedes guardar la versión final dando clic al botón \"Guardar versión final\".", value=st.session_state.adapted_response, height=250)
+        new_text = st.text_area("✍️ Aquí puedes editar manualmente lo que quieras, para que quede más claro lo que estás viviendo.\n\nSi quieres hacer más cambios con la Inteligencia Artificial, puedes hacerlo arriba y se irán reflejando aquí.\n\nSi no, puedes guardar la versión final dando clic al botón \"Guardar narrativa\".", value=st.session_state.adapted_response, height=250)
         st.session_state.adapted_response = new_text
 
         # === BOTÓN DE GUARDADO FINAL (después de la sección de IA) ===
         if st.session_state.agentState == "summarise1":
-            if st.button("✅ Guardar versión final"):
+            if st.button("✔ Guardar narrativa"):
                     guardar_final = True
 
         # Guarda en Google Sheets y pasa a vista final
@@ -559,15 +559,16 @@ elif not st.session_state.vista_final:
     
     # === FLUJO: RESUMEN Y EDICIÓN 2 ===
     if st.session_state.summarise2 and st.session_state.segundo_porque:
-        st.subheader("📄 Tu reflexión en tus propias palabras")
-        st.markdown("Ha llegado la hora de personalizar aún más tu experiencia interna.")
+        st.subheader("⭐ Tu reflexión final")
+        st.markdown("Ahora que indagamos en lo que te estaba pasando y en cómo estaba tu mente, tenemos una idea más clara de la situación completa." \
+        " Aún podemos personalizar tu experiencia un poco más si lo crees necesario.")
         guardar_final2 = False
 
         # === OPCIÓN DE MEJORA CON IA ===
-        st.markdown("##### ✨ ¿Quieres mejorar tu reflexión con ayuda de la Inteligencia Artificial?")
-        st.markdown("Si lo deseas, aquí le puedes pedir a la Inteligencia Artificial que te ayude a cambiar el texto.  \n"
+        st.markdown("##### 🎯 ¿Quieres mejorar tu reflexión con ayuda de la IA?")
+        st.markdown("Si lo deseas, aquí le puedes pedir de nuevo a la IA que te ayude a cambiar el texto.  \n"
                     "**Por ejemplo:** puedes pedirle que te ayude a agregar lo que falte, quitar lo que no quieras o cambiar el tono.")
-        with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
+        with st.expander("🔧 Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
             first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.segundo_porque}\n\n")
             st.markdown(first_ai_message)
             st.markdown("Los cambios que hagas se guardarán en la caja de texto de abajo, donde podrás editar manualmente en el momento que quieras.")
@@ -617,12 +618,12 @@ elif not st.session_state.vista_final:
         
         st.markdown("\n\n\n\n")
         # Usuario puede editar la narrativa final
-        new_text = st.text_area("✍️ Aquí puedes editar manualmente lo que quieras, para que quede más claro lo que estás viviendo.\n\nSi quieres hacer más cambios con la Inteligencia Artificial, puedes hacerlo arriba y se irán reflejando aquí.\n\nSi no, puedes guardar la versión final dando clic al botón \"Guardar versión final\".", value=st.session_state.adapted_response2, height=250)
+        new_text = st.text_area("📝 Aquí puedes editar manualmente lo que quieras, para que quede más claro lo que estás viviendo.\n\nSi quieres hacer más cambios con la Inteligencia Artificial, puedes hacerlo arriba y se irán reflejando aquí.\n\nSi no, puedes guardar la versión final dando clic al botón \"Guardar reflexión final\".", value=st.session_state.adapted_response2, height=250)
         st.session_state.adapted_response2 = new_text
 
         # === BOTÓN DE GUARDADO FINAL (después de la sección de IA) ===
         if st.session_state.agentState == "summarise2":
-            if st.button("✅ Guardar versión final"):
+            if st.button("✅ Guardar reflexión final"):
                     guardar_final2 = True
 
         # Guarda en Google Sheets y pasa a vista final
