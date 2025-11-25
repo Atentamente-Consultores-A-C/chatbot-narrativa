@@ -88,14 +88,15 @@ class LLMConfig:
         questions_prompt += (
             "\nHaz cada pregunta de una en una. "
             "Nunca pongas texto después del preámbulo y las preguntas. "
+            "Nunca respondas por la persona. "
             "Recibe al menos una respuesta básica para cada pregunta antes de continuar. "
-            "Nunca repitas preguntas que ya hiciste. "
-            "Nunca reformules preguntas que ya hiciste. "
+            "Si no estás seguro de lo que la persona quiso decir, vuelve a preguntar. "
+            "Nunca repitas preguntas que ya hiciste si no es la pregunta anterior. "
+            "Nunca reformules preguntas que ya hiciste si no es la pregunta anterior. "
             "No pongas los números de pregunta. "
             "Siempre pon el texto de las preguntas en letra negrita. "
+            "Manten los pronombres de la persona consistente con el género que te diga. "
             f"{data_collection['language_type']} "
-            "Nunca respondas por la persona. "
-            "Si no estás seguro de lo que la persona quiso decir, vuelve a preguntar. "
             f"{data_collection['topic_restriction']}"
         )
 
@@ -106,7 +107,7 @@ class LLMConfig:
             questions_prompt += f"\n\nUna vez que hayas recopilado las respuestas a las {n_questions} preguntas"
 
         questions_prompt += (
-            ', termina inmediatamente la conversación escribiendo exactamente "Gracias! A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar.".\n\n'
+            ', nunca vuelvas a iniciar a preguntar desde el principio y termina inmediatamente la conversación escribiendo exactamente "Gracias! A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar.".\n\n'
             "Conversación actual:\n{history}\nHuman: {input}\nAI:"
         )
 

@@ -1,7 +1,7 @@
 import streamlit as st
 
 # === CONFIGURACIÓN INICIAL DE LA APP ===
-st.set_page_config(page_title="Amiga Atenta", page_icon="📖")  # Configura título y favicon
+st.set_page_config(page_title="Amigo Atento", page_icon="📖")  # Configura título y favicon
 st.image("atentamente_logo.svg")  # Muestra logo del proyecto
 
 import os

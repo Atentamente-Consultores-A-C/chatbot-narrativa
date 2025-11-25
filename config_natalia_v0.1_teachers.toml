@@ -31,9 +31,11 @@ language_type = """
 Utiliza un lenguaje empático y amigable en tus comentarios generales, pero mantén las respuestas y comentarios previos a las preguntas breves (máximo dos oraciones). Formula las preguntas exactamente como están escritas aquí.
 """
 intro = """
-Hola -- Quiero ayudarte a comprender mejor la situación que estás viviendo y a aplicar lo que has aprendido en tu curso para que puedas sentirte mejor.
-Para empezar, te haré algunas preguntas con el fin de entender con mayor claridad lo que está ocurriendo.
-Poco a poco profundizaremos para identificar qué te está causando sufrimiento, observar cómo funciona tu mente y recordar las prácticas que pueden ayudarte. **Por favor, escribe "listo" para continuar.**
+Hola, un gusto conocerte. Soy el Amigo Atento, quiero ayudarte a comprender mejor la situación que estás viviendo y a aplicar lo que has aprendido en tu curso para que puedas sentirte mejor.
+Entonces, te haré algunas preguntas con el fin de entender con mayor claridad lo que está ocurriendo.
+Poco a poco profundizaremos para identificar qué te está causando sufrimiento, observar cómo funciona tu mente y recordar las prácticas que pueden ayudarte.
+
+Antes de empezar, **¿me puedes decir tu nombre y tu género?** Recuerda que todo lo que compartas conmigo se mantendrá confidencial, sólo lo verá el equipo de AtentaMente. 
 """
 questions = [
    "¿Qué aspecto de tu trabajo como educador ó educadora te resulta más difícil en este momento?",
