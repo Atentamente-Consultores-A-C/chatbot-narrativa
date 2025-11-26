@@ -47,10 +47,6 @@ class LLMConfig:
         # Prompt de inicio y plantilla para reflexión e inicio de etapa ABCD
         self.reflect_intro = config["reflect"]["intro"].strip()
         self.reflect_prompt_template = self.generate_reflect_prompt_template(config["reflect"])
-        self.reflect_outro = (
-            " Gracias por compartir tu situación conmigo. "
-            "Esta reflexión es un regalo para tu práctica. 🌱"
-        )
 
         # Prompt de followup y plantilla para preguntas de desequilibrios en el ABCD
         self.a_intro = config["abcd"]["atencion"]["intro"].strip()
@@ -193,7 +189,7 @@ class LLMConfig:
         main_prompt_template += "Crea un escenario basado en estas respuestas.\n\n"
 
         main_prompt_template += "Un poco de contexto sobre la situación de esta persona:\n\n"
-        main_prompt_template += "< {context} >\n\n"
+        main_prompt_template += "< {context} >\n\nSé consistente con sus pronombres.\n\n"
         main_prompt_template += (
             "Tu respuesta debe ser un archivo JSON con una sola entrada llamada 'output_scenario'."
         )
@@ -258,7 +254,7 @@ class LLMConfig:
         reflect_prompt += "\n\nUna vez que hayas dado la instrucción y la persona haya escrito <Listo> "
 
         reflect_prompt += (
-            ', termina inmediatamente la conversación escribiendo únicamente la palabra "Gracias!".\n\n'
+            ', termina inmediatamente la conversación escribiendo exactamente "Gracias! Gracias por compartir tu situación conmigo. Esta reflexión es un regalo para tu práctica. 🌱".\n\n'
             "Conversación actual:\n{history}\nHuman: {input}\nAI:"
         )
 
