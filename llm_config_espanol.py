@@ -92,7 +92,7 @@ class LLMConfig:
             "No pongas los números de pregunta. "
             "Siempre pon el texto de las preguntas en letra negrita. "
             "Manten los pronombres de la persona consistente con el género que te diga. "
-            "Sólo llama a la persona por su nombre en el preámbulo de la primera pregunta, después no vuelvas a mencionar su nombre."
+            "Sólo llama a la persona por su nombre en el preámbulo de la primera pregunta, después nunca vuelvas a mencionar su nombre."
             f"{data_collection['language_type']} "
             f"{data_collection['topic_restriction']}"
         )
