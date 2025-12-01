@@ -257,7 +257,7 @@ class LLMConfig:
         reflect_prompt += "\n\nUna vez que hayas dado la instrucción y la persona haya escrito <Listo> "
 
         reflect_prompt += (
-            ', termina inmediatamente la conversación escribiendo exactamente "Gracias! Gracias por compartir tu situación conmigo. Esta reflexión es un regalo para tu práctica. 🌱".\n\n'
+            ', termina inmediatamente la conversación escribiendo exactamente "Gracias!".\n\n'
             "Conversación actual:\n{history}\nHuman: {input}\nAI:"
         )
 
