@@ -16,6 +16,7 @@ class LLMConfig:
 
         # Texto inicial y consentimiento del usuario
         self.intro_and_consent = config["consent"]["intro_and_consent"].strip()
+        self.informed_consent = config["consent"]["informed_consent"].strip()
 
         # Prompt de inicio y plantilla para preguntas de recolección de datos
         self.questions_intro = config["collection"]["intro"].strip()

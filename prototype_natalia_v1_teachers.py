@@ -122,6 +122,8 @@ with slots["top"]:
     if not st.session_state.consent:
         with st.container():
             st.markdown(llm_prompts.intro_and_consent)  # Texto inicial desde TOML
+            with st.expander("📑 Consentimiento informado", expanded=False):
+                st.markdown(llm_prompts.informed_consent)
             st.button("He leído, estoy de acuerdo", key="consent_button", on_click=lambda: st.session_state.update({"consent": True}))
         st.stop()  # Detiene ejecución hasta aceptar
 

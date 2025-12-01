@@ -20,7 +20,43 @@ Esta información nos servirá para, muy pronto, generar recursos y recomendacio
 
 Te aseguramos que tu información se mantendrá confidencial y sólo la verán los miembros del equipo de AtentaMente, con fin de seguir mejorando los recursos que te podemos dar.
 
-👉 **Por favor, lee este documento de consentimiento antes de avanzar y si estás de acuerdo, podemos seguir.**
+👉🏽 **Por favor, lee este documento de consentimiento antes de avanzar y si estás de acuerdo, podemos seguir.**
+"""
+
+informed_consent = """
+🔸 **Propósito del proyecto**
+
+Esta herramienta tiene como propósito acompañar a las y los docentes en la aplicación práctica de los conocimientos impartidos en el curso de AtentaMente que ya han tomado. Busca ayudarles a familiarizarse más con las prácticas de entrenamiento mental, atención plena (mindfulness) y bienestar socioemocional, apoyando su integración en la vida cotidiana y en el aula.
+
+🔸 **Tipo de participación**
+
+Su participación consiste en responder a preguntas abiertas mediante una herramienta digital que genera micronarrativas y reflexiones sobre su experiencia docente. La participación es voluntaria y puede retirarse en cualquier momento sin consecuencias.
+
+🔸 **Manejo de la información y confidencialidad**
+
+Toda la información proporcionada será tratada como estrictamente confidencial. Sus datos personales no serán compartidos ni publicados. Solo el equipo autorizado de AtentaMente tendrá acceso y su identidad será reemplazada por códigos anónimos.
+
+🔸 **Uso de la información**
+
+Se utilizará exclusivamente para diseñar y mejorar herramientas socioemocionales, comprender necesidades reales del aula, desarrollar programas basados en evidencia y realizar análisis agregados.
+
+🔸 **Riesgos y beneficios**
+
+Riesgos: mínimos, relacionados con la reflexión personal. Beneficios: reflexión emocional, apoyo docente y participación en un proyecto de bienestar educativo.
+
+🔸 **Voluntariedad**
+
+Su participación es completamente voluntaria y puede retirarse en cualquier momento sin consecuencias.
+
+📧 **Contacto para dudas**
+
+AtentaMente Consultores A.C.
+
+li.lopez@atentamente.mx o nat.diaz@atentamente.mx
+
+✍🏽 **Declaración de consentimiento**
+
+He leído y comprendido la información anterior y autorizo mi participación.
 """
 
 ###  Esta sección configura el bot de recopilación de datos. ###
