@@ -18,7 +18,7 @@ intro_and_consent = """## ¡Bienvenido/a a nuestro chatbot para maestros y maest
 Vas a interactuar con un chatbot que, a través de algunas preguntas, te ayudará a tener más claridad de lo que estás viviendo y aplicar lo que has aprendido en tu curso de AtentaMente.
 Esta información nos servirá para, muy pronto, generar recursos y recomendaciones que te apoyen en tu día a día como docente.
 
-Te aseguramos que tu información se mantendrá confidencial y sólo la verán los miembros del equipo de AtentaMente, con fin de seguir mejorando los recursos que te podemos dar.
+Te aseguramos que tu información se mantendrá confidencial y sólo la verán los miembros del equipo de AtentaMente, con fines de investigación y para seguir mejorando los recursos que te podemos dar.
 
 👉🏽 **Por favor, lee este documento de consentimiento antes de avanzar y si estás de acuerdo, podemos seguir.**
 """
@@ -68,8 +68,8 @@ Utiliza un lenguaje empático y amigable en tus comentarios generales, pero mant
 """
 intro = """
 Hola, un gusto conocerte. Soy el Amigo Atento, quiero ayudarte a comprender mejor la situación que estás viviendo y a aplicar lo que has aprendido en tu curso para que puedas sentirte mejor.
-Entonces, te haré algunas preguntas con el fin de entender con mayor claridad lo que está ocurriendo.
-Poco a poco profundizaremos para identificar qué te está causando sufrimiento, observar cómo funciona tu mente y recordar las prácticas que pueden ayudarte.
+Para ello, te haré algunas preguntas con el fin de entender con mayor claridad lo que está ocurriendo.
+Poco a poco profundizaremos para identificar qué te está causando malestar, observar cómo funciona tu mente y recordar las prácticas que pueden ayudarte.
 
 Antes de empezar, **¿me puedes decir tu nombre y tu género?** Recuerda que todo lo que compartas conmigo se mantendrá confidencial, sólo lo verá el equipo de AtentaMente. 
 """
@@ -169,11 +169,11 @@ Antes de seguir, tómate un momento.
 
 No hay respuestas correctas o incorrectas; simplemente describe lo que recuerdas de tu estado mental."""
 
-instruction = """Como recordarás del curso, solemos observar nuestras experiencias a través de cuatro cualidades del entrenamiento mental: Atención, Bondad, Claridad y Dirección.
+instruction = """Como recordarás del curso, solemos observar nuestras experiencias a través de cuatro aspectos del entrenamiento mental: Atención, Bondad, Claridad y Dirección.
 
-A veces, alguna de estas cualidades se desequilibra, y eso influye en cómo interpretamos lo que pasa y en cómo nos sentimos.
+A veces, alguna de estas cualidades se desequilibra, y eso influye en cómo interpretamos lo que pasa, cómo nos sentimos y cómo actuamos.
 Al mirar tu situación desde estos cuatro ángulos, podrás ver qué parte de tu mente estaba fuera de balance y cómo eso contribuyó a tu malestar.
-Esa comprensión es importante porque, aunque no siempre podemos cambiar lo que sucede afuera, sí podemos trabajar con nuestra mente —y ahí está nuestra verdadera libertad.
+Esa comprensión es importante porque, aunque no siempre podemos cambiar lo que sucede afuera, sí podemos trabajar con nuestra mente —y eso nos empodera.
 Ahora veamos tu experiencia desde esos cuatro aspectos.
 
 **Por favor, escribe "listo" para continuar.**"""

@@ -133,10 +133,10 @@ with slots["top"]:
         st.markdown("#### Has llegado al final de la creación de tu narrativa con nuestro chatbot para maestros y maestras")
         st.markdown("**Tu narrativa se guardó correctamente**. Esperamos que este ejercicio te haya ayudado a ver tu situación con más claridad. Si deseas guardarla para ti, copia el texto antes de salir, porque aquí se borrará. Recuerda que tu información es confidencial y no será compartida con nadie.  \n")
         st.markdown("Esta es la narrativa final de la situación:")
-        st.markdown(f"> {st.session_state.primer_porque}")
+        st.markdown(f"> {st.session_state.primer_porque.replace("\n", " ")}")
 
         st.markdown("Pero esa no es la historia completa.\nEsto es lo que estaba pasando en tu mente realmente:")
-        st.markdown(f"> {st.session_state.segundo_porque}")
+        st.markdown(f"> {st.session_state.segundo_porque.replace("\n", " ")}")
 
         st.markdown("##### 🎉 ¡Gracias por participar! ")
 
@@ -278,7 +278,7 @@ if not st.session_state.vista_final:
                     # Botón para seleccionar narrativa
                     if st.button("Elegir versión", key=f"elegir_col_{idx}"):
                         st.session_state.persona_elegida_idx = idx
-                        st.session_state.primer_porque = texto
+                        st.session_state.primer_porque = texto.replace("\n", " ")
                         st.session_state.summarise1 = True
                         st.session_state.agentState = "summarise1"
                         st.success("Narrativa seleccionada.")
@@ -296,13 +296,13 @@ if not st.session_state.vista_final:
             st.markdown("Si lo deseas, aquí le puedes pedir a la Inteligencia Artificial que te ayude a cambiar el texto.  \n"
                         "**Por ejemplo:** puedes pedirle que te ayude a agregar lo que falte, quitar lo que no quieras o cambiar el tono.")
             with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
-                first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.primer_porque}\n\n")
+                first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.primer_porque.replace("\n", " ")}\n\n")
                 st.markdown(first_ai_message)
                 st.markdown("Los cambios que hagas se guardarán en la caja de texto de abajo, donde podrás editar manualmente en el momento que quieras.")
 
                 # Inicializa variables de sesión para este subchat
                 if "adapted_response" not in st.session_state:
-                    st.session_state.adapted_response = st.session_state.primer_porque
+                    st.session_state.adapted_response = st.session_state.primer_porque.replace("\n", " ")
                 if "adaptation_messages" not in st.session_state:
                     st.session_state.adaptation_messages = []
 
@@ -353,11 +353,11 @@ if not st.session_state.vista_final:
                 if st.button("✔ Guardar narrativa"):
                         guardar_final = True
 
-            # Guarda en Google Sheets y pasa a vista final
+            # Guarda en Google Sheets y pasa a siguiente estado
             if guardar_final:
                 if st.session_state.ai_used:
                     new_text = st.session_state.adapted_response
-                st.session_state.primer_porque = new_text
+                st.session_state.primer_porque = new_text.replace("\n", " ")
 
                 try:
                     sheet.append_row([new_text, datetime.now().isoformat()])
@@ -452,7 +452,8 @@ if not st.session_state.vista_final:
             st.markdown("\n\n")  # pequeño espacio
 
             if st.session_state.await_pick_top and st.session_state.abcd_tie_options:
-                st.info("Hay más de un desequilibrio con la calificación más alta.\n\nPor favor, elige en cuál quisieras profundizar:")
+                st.info("Entiendo que hay más de un aspecto que estuvo muy presente.\n\n" \
+                "Te propongo que comencemos por explorar el que más te esté afectando en este momento, ¿cuál crees que sea?")
                 opts = st.session_state.abcd_tie_options
                 cols = st.columns(len(opts))
                 for col, k in zip(cols, opts):
@@ -572,7 +573,7 @@ if not st.session_state.vista_final:
                                     "context": st.session_state.primer_porque,
                                     **summary_input
                                 })
-                            st.session_state.segundo_porque = result['output_scenario']
+                            st.session_state.segundo_porque = result['output_scenario'].replace("\n", " ")
                             # Cambia de estado
                             #st.session_state.vista_final = True
                             st.session_state.summarise2 = True
@@ -593,13 +594,13 @@ if not st.session_state.vista_final:
             st.markdown("Si lo deseas, aquí le puedes pedir de nuevo a la IA que te ayude a cambiar el texto.  \n"
                         "**Por ejemplo:** puedes pedirle que te ayude a agregar lo que falte, quitar lo que no quieras o cambiar el tono.")
             with st.expander("🔧 Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
-                first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.segundo_porque}\n\n")
+                first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.segundo_porque.replace("\n", " ")}\n\n")
                 st.markdown(first_ai_message)
                 st.markdown("Los cambios que hagas se guardarán en la caja de texto de abajo, donde podrás editar manualmente en el momento que quieras.")
 
                 # Inicializa variables de sesión para este subchat
                 if "adapted_response2" not in st.session_state:
-                    st.session_state.adapted_response2 = st.session_state.segundo_porque
+                    st.session_state.adapted_response2 = st.session_state.segundo_porque.replace("\n", " ")
                 if "adaptation_messages2" not in st.session_state:
                     st.session_state.adaptation_messages2 = []
 
@@ -654,7 +655,7 @@ if not st.session_state.vista_final:
             if guardar_final2:
                 if st.session_state.ai_used2:
                     new_text = st.session_state.adapted_response2
-                st.session_state.segundo_porque = new_text
+                st.session_state.segundo_porque = new_text.replace("\n", " ")
 
                 try:
                     sheet.append_row([new_text, datetime.now().isoformat()])
