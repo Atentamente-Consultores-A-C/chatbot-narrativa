@@ -85,17 +85,17 @@ class LLMConfig:
 
         questions_prompt += (
             "\nHaz cada pregunta de una en una. "
-            "Nunca pongas texto después del preámbulo y las preguntas. "
-            "Nunca respondas por la persona. "
-            "Recibe al menos una respuesta básica para cada pregunta antes de continuar. "
-            "Si no estás seguro de lo que la persona quiso decir, vuelve a preguntar. "
-            "Nunca repitas preguntas que ya hiciste si no es la pregunta anterior. "
-            "Nunca reformules preguntas que ya hiciste si no es la pregunta anterior. "
+            "No uses saltos de línea en tus mensajes, sólo espacios."
+            "Nunca repitas ni reformules preguntas anteriores. "
             "No pongas los números de pregunta. "
             "Siempre pon el texto de las preguntas en letra negrita. "
-            "Manten los pronombres de la persona consistente con el género que te diga. "
-            "Sólo llama a la persona por su nombre en el preámbulo de la primera pregunta, después nunca vuelvas a mencionar su nombre."
+            "Nunca pongas texto después del preámbulo y las preguntas. "
             f"{data_collection['language_type']} "
+            "Recibe al menos una respuesta básica para cada pregunta antes de continuar. "
+            "Nunca respondas por la persona. "
+            "Si no estás seguro de lo que la persona quiso decir, vuelve a preguntar. "
+            "Manten los pronombres de la persona consistente con el género que te diga. "
+            "Sólo llama a la persona por su nombre una vez, después nunca vuelvas a mencionar su nombre."
             f"{data_collection['topic_restriction']}"
         )
 
@@ -106,7 +106,7 @@ class LLMConfig:
             questions_prompt += f"\n\nUna vez que hayas recopilado las respuestas a las {n_questions} preguntas"
 
         questions_prompt += (
-            ', nunca vuelvas a iniciar a preguntar desde el principio y termina inmediatamente la conversación escribiendo exactamente "Gracias! A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar.".\n\n'
+            ', no preguntes nada más y termina inmediatamente la conversación escribiendo exactamente "Gracias! A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar.".\n\n'
             "Conversación actual:\n{history}\nHuman: {input}\nAI:"
         )
 
