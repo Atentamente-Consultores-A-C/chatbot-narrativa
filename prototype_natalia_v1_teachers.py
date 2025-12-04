@@ -89,13 +89,14 @@ def init_session():
 init_session()
 
 # ==== LAYOUT ESTABLE: pre-monta contenedores en orden fijo ====
-slots = {}
-for name in [
-    "top", "select_micronarrative",
-    "summarise1", "reflect",
-    "sliders", "abcd", "summarise2"
-]:
-    slots[name] = st.container()
+if not st.session_state.vista_final:
+    slots = {}
+    for name in [
+        "top", "select_micronarrative",
+        "summarise1", "reflect",
+        "sliders", "abcd", "summarise2"
+    ]:
+        slots[name] = st.container()
 
 # === CONFIGURACIÓN DE LLM Y MEMORIA DE CONVERSACIÓN ===
 openai_api_key = st.secrets["OPENAI_API_KEY"]
@@ -118,8 +119,8 @@ memory_abcd = ConversationBufferMemory(
 chat = ChatOpenAI(temperature=0.3, model=st.session_state.llm_model, openai_api_key=openai_api_key)
 
 # === FLUJO: PANTALLA DE CONSENTIMIENTO ===
-with slots["top"]:
-    if not st.session_state.consent:
+if not st.session_state.consent:
+    with slots["top"]:
         with st.container():
             st.markdown(llm_prompts.intro_and_consent)  # Texto inicial desde TOML
             with st.expander("📑 Consentimiento informado", expanded=False):
@@ -128,40 +129,40 @@ with slots["top"]:
         st.stop()  # Detiene ejecución hasta aceptar
 
 # === FLUJO: PANTALLA FINAL ===
-with slots["top"]:
-    if st.session_state.vista_final:
-        st.markdown("#### Has llegado al final de la creación de tu narrativa con nuestro chatbot para maestros y maestras")
-        st.markdown("**Tu narrativa se guardó correctamente**. Esperamos que este ejercicio te haya ayudado a ver tu situación con más claridad. Si deseas guardarla para ti, copia el texto antes de salir, porque aquí se borrará. Recuerda que tu información es confidencial y no será compartida con nadie.  \n")
-        st.markdown("Esta es la narrativa final de la situación:")
-        st.markdown(f"> {st.session_state.primer_porque.replace("\n", " ")}")
+if st.session_state.vista_final:
+    st.markdown("#### Has llegado al final de la creación de tu narrativa con nuestro chatbot para maestros y maestras")
+    st.markdown("**Tu narrativa se guardó correctamente**. Esperamos que este ejercicio te haya ayudado a ver tu situación con más claridad. Si deseas guardarla para ti, copia el texto antes de salir, porque aquí se borrará. Recuerda que tu información es confidencial y no será compartida con nadie.  \n")
+    st.markdown("Esta es la narrativa final de la situación:")
+    st.markdown(f"> {st.session_state.primer_porque}")
 
-        st.markdown("Pero esa no es la historia completa.\nEsto es lo que estaba pasando en tu mente realmente:")
-        st.markdown(f"> {st.session_state.segundo_porque.replace("\n", " ")}")
+    st.markdown("Pero esa no es la historia completa.\nEsto es lo que estaba pasando en tu mente realmente:")
+    st.markdown(f"> {st.session_state.segundo_porque}")
 
-        st.markdown("##### 🎉 ¡Gracias por participar! ")
+    st.markdown("##### 🎉 ¡Gracias por participar! ")
 
 
-        st.markdown("---")
-        st.markdown("#### Tu experiencia es muy valiosa para nosotros 🙌")
-        st.markdown("Antes de terminar, nos encantaría que nos ayudes a completar esta breve encuesta de retroalimentación para mejorar el chatbot.")
-        st.markdown(
-            """
-            <a href="https://forms.gle/pxBtvu8WPRAort7b7" target="_blank">
-                <button style="background-color:#ec6041; color:white; padding:0.75rem 1.5rem; border:none; border-radius:12px; font-size:16px; cursor:pointer;">
-                    Ir a encuesta de retroalimentación
-                </button>
-            </a>
-            """,
-            unsafe_allow_html=True
-        )
+    st.markdown("---")
+    st.markdown("#### Tu experiencia es muy valiosa para nosotros 🙌")
+    st.markdown("Antes de terminar, nos encantaría que nos ayudes a completar esta breve encuesta de retroalimentación para mejorar el chatbot.")
+    st.markdown(
+        """
+        <a href="https://forms.gle/pxBtvu8WPRAort7b7" target="_blank">
+            <button style="background-color:#ec6041; color:white; padding:0.75rem 1.5rem; border:none; border-radius:12px; font-size:16px; cursor:pointer;">
+                Ir a encuesta de retroalimentación
+            </button>
+        </a>
+        """,
+        unsafe_allow_html=True
+    )
 
-        st.markdown("\n")
-        st.markdown("**Cuando termines de responder la encuesta y/o desees terminar la sesión, da clic en el botón \"Listo\".**")
-        if st.button("Listo", key="reset_button"):
-            # Reiniciar estado para volver a pantalla de consentimiento
-            st.session_state.clear()
-            st.rerun()
-        st.stop()
+    st.markdown("\n")
+    st.markdown("**Cuando termines de responder la encuesta y/o desees terminar la sesión, da clic en el botón \"Listo\".**")
+    if st.button("Listo", key="reset_button"):
+        # Reiniciar estado para volver a pantalla de consentimiento
+        st.session_state.clear()
+        st.session_state.vista_final = False
+        st.rerun()
+    st.stop()
 
 
 # === FLUJO: CHAT PRINCIPAL ===
@@ -296,7 +297,7 @@ if not st.session_state.vista_final:
             st.markdown("Si lo deseas, aquí le puedes pedir a la Inteligencia Artificial que te ayude a cambiar el texto.  \n"
                         "**Por ejemplo:** puedes pedirle que te ayude a agregar lo que falte, quitar lo que no quieras o cambiar el tono.")
             with st.expander("🛠️ Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
-                first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.primer_porque.replace("\n", " ")}\n\n")
+                first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.primer_porque}\n\n")
                 st.markdown(first_ai_message)
                 st.markdown("Los cambios que hagas se guardarán en la caja de texto de abajo, donde podrás editar manualmente en el momento que quieras.")
 
@@ -594,7 +595,7 @@ if not st.session_state.vista_final:
             st.markdown("Si lo deseas, aquí le puedes pedir de nuevo a la IA que te ayude a cambiar el texto.  \n"
                         "**Por ejemplo:** puedes pedirle que te ayude a agregar lo que falte, quitar lo que no quieras o cambiar el tono.")
             with st.expander("🔧 Haz clic aquí para adaptar tu texto con la Inteligencia Artificial", expanded=False):
-                first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.segundo_porque.replace("\n", " ")}\n\n")
+                first_ai_message = (f"Aquí puedes refinar la narrativa que elegiste:\n\n> {st.session_state.segundo_porque}\n\n")
                 st.markdown(first_ai_message)
                 st.markdown("Los cambios que hagas se guardarán en la caja de texto de abajo, donde podrás editar manualmente en el momento que quieras.")
 
