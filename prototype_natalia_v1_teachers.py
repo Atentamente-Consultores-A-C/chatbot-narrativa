@@ -359,11 +359,6 @@ if not st.session_state.vista_final:
                 if st.session_state.ai_used:
                     new_text = st.session_state.adapted_response
                 st.session_state.primer_porque = new_text.replace("\n", " ")
-
-                try:
-                    sheet.append_row([new_text, datetime.now().isoformat()])
-                except Exception as e:
-                    st.error(f"❌ Error al guardar en Google Sheets: {e}")
                 
                 st.session_state.reflect = True
                 st.session_state.agentState = "reflect"
@@ -509,9 +504,14 @@ if not st.session_state.vista_final:
             if not msgs_abcd.messages:
                     msgs_abcd.add_ai_message(lp_intro)  # Primer mensaje del bot
             with entry_messages_abcd:
+                first = True
                 for m in msgs_abcd.messages:
                     with st.chat_message(m.type):
                         st.markdown(f"<span style='color:black'>{m.content}</span>", unsafe_allow_html=True)
+                    if first and st.session_state.abcd_top == "claridad":
+                        first = False
+                        with st.expander("Si quieres ver algunas de las serpientes más comunes para recordarlas, aquí puedes verlas 👇", expanded=False):
+                            st.markdown(llm_prompts.serpents)
 
             if st.session_state.agentState == "abcd":
                 prompt_abcd = st.chat_input("Escribe aquí")
@@ -546,20 +546,20 @@ if not st.session_state.vista_final:
                             final_message += llm_prompts.abcd_outro
                         st.chat_message("ai").markdown(f"<span style='color:black'>{final_message}</span>", unsafe_allow_html=True)
 
-                        msgs_joined = StreamlitChatMessageHistory(key="joined_messages")
-                        for m in msgs_reflect.messages:
-                            if m.type == "ai":
-                                msgs_joined.add_ai_message(m.content)
-                            elif m.type == "human":
-                                msgs_joined.add_user_message(m.content)
-                        for m in msgs_abcd.messages:
-                            if m.type == "ai":
-                                msgs_joined.add_ai_message(m.content)
-                            elif m.type == "human":
-                                msgs_joined.add_user_message(m.content)
-
                         # === GENERACIÓN DE MICRONARRATIVA ===
                         if "Gracias!" in response['text']:
+                            msgs_joined = StreamlitChatMessageHistory(key="joined_messages")
+                            for m in msgs_reflect.messages:
+                                if m.type == "ai":
+                                    msgs_joined.add_ai_message(m.content)
+                                elif m.type == "human":
+                                    msgs_joined.add_user_message(m.content)
+                            for m in msgs_abcd.messages:
+                                if m.type == "ai":
+                                    msgs_joined.add_ai_message(m.content)
+                                elif m.type == "human":
+                                    msgs_joined.add_user_message(m.content)
+
                             summary_prompt = PromptTemplate.from_template(llm_prompts.second_why_prompt)
                             parser = SimpleJsonOutputParser()
                             chain = summary_prompt | chat | parser
@@ -658,8 +658,17 @@ if not st.session_state.vista_final:
                     new_text = st.session_state.adapted_response2
                 st.session_state.segundo_porque = new_text.replace("\n", " ")
 
+                history_text_questions = "\n".join(f"{m.type.upper()}: {m.content}" for m in msgs_questions.messages)
+                history_text_reflect = "\n".join(f"{m.type.upper()}: {m.content}" for m in msgs_reflect.messages)
+                history_text_abcd = "\n".join(f"{m.type.upper()}: {m.content}" for m in msgs_abcd.messages)
+
                 try:
-                    sheet.append_row([new_text, datetime.now().isoformat()])
+                    sheet.append_row([datetime.now().isoformat(),
+                                      st.session_state.primer_porque,
+                                      st.session_state.segundo_porque,
+                                      history_text_questions,
+                                      history_text_reflect,
+                                      history_text_abcd])
                 except Exception as e:
                     st.error(f"❌ Error al guardar en Google Sheets: {e}")
                 

@@ -246,7 +246,7 @@ Desde ahí, reaccionamos a interpretaciones más que a lo que realmente está oc
 
 ¿Qué tanto sientes que este desequilibrio de la claridad estuvo presente en tu mente en esa situación?"""
 followups = [
-  "¿Cómo estabas viendo las cosas? ¿Podría ser que tu mente estuviera interpretando o dando por hecho algo que no era tan cierto, como si vieras una “serpiente” donde sólo había una cuerda? Por ejemplo, pensar que algo era permanente (“esto siempre será así”), o que alguien actuó con mala intención.",
+  "¿Cómo estabas viendo la situación? ¿Sientes que alguna de esas “serpientes” pudo haberse colado en tu interpretación y teñir lo que estabas percibiendo?",
   "¿Cómo influyó esa forma de ver la situación en lo que sentiste o hiciste? ¿Te llevó a reaccionar desde la confusión o el miedo, sin darte tiempo de ver con más luz o perspectiva?",
   "¿Hay algo que ahora ves con más claridad y que en ese momento no notabas? Tal vez algo que malinterpretaste, un detalle que ignoraste o una posibilidad que pasó desapercibida.",
   "Si volvieras a vivir algo parecido, ¿cómo podrías darte cuenta de que tu mente está “viendo serpientes” —es decir, confundiendo interpretaciones con realidad—, y que es momento de hacer una pausa antes de reaccionar?"
@@ -256,7 +256,58 @@ intro = """Gracias 🌱
 Aprecio que te hayas tomado un momento para observar tu experiencia.
 Por lo que compartiste, parece que el desequilibrio más fuerte en esa situación fue en **Claridad**.
 
-Ya que recuerdas cómo estaba tu mente en ese momento, **¿cómo estabas viendo las cosas? ¿Podría ser que tu mente estuviera interpretando o dando por hecho algo que no era tan cierto, como si vieras una “serpiente” donde sólo había una cuerda? Por ejemplo, pensar que algo era permanente (“esto siempre será así”), o que alguien actuó con mala intención.**"""
+Ya que recuerdas cómo estaba tu mente en ese momento, veamos ahora cómo estabas interpretando lo que pasó.
+Recuerda que en el curso vimos que, cuando la claridad se desequilibra, la mente puede contarnos historias que parecen muy reales y que aumentan nuestro malestar. A estas interpretaciones automáticas les llamamos “serpientes”, porque a veces reaccionamos como si hubiera un peligro real… cuando en realidad sólo había una cuerda en el suelo.
+
+Cuando recuerdas ese momento, **¿cómo estabas viendo la situación?
+¿Sientes que alguna de esas “serpientes” pudo haberse colado en tu interpretación y teñir lo que estabas percibiendo?**"""
+
+serpents = """
+**1. Pensar en “blanco y negro” o en términos absolutos**
+
+La tendencia a ver las cosas en términos de “todo” o “nada”, “bueno” o “malo”.
+Ejemplo: Si no sale perfecto este proyecto, no sirve para nada.
+
+**2. Descalificar lo positivo y enfocarse en lo negativo**
+
+La tendencia a ignorar los aspectos o comentarios positivos de una situación y enfocarse en lo negativo.
+Ejemplo: La presentación me salió fatal. Los que me felicitaron sólo lo hicieron para no hacerme sentir mal.
+
+**3. Generalizar**
+
+La tendencia a generalizar basados en un solo evento o en muy poca evidencia.
+Ejemplo: Esa persona siempre llega tarde. La única vez que me reuní con ella llegó 15 minutos después.
+
+**4. Saltar a conclusiones**
+
+La tendencia a asumir cosas sobre las personas o las circunstancias; asumir que uno sabe lo que las personas piensan o por qué actúan de cierta manera.
+Ejemplo: María no me contestó el teléfono. Seguro que ya no quiere trabajar conmigo.
+
+**5. Pensamientos catastróficos**
+
+La tendencia a exagerar los problemas o verlos fuera de proporción.
+Ejemplo: Si no le gusta nuestro trabajo a este cliente, no vamos a obtener otro contrato y será terrible para todos.
+
+**6. Hacerlo personal**
+
+La tendencia a tomarnos las cosas de manera personal.
+Ejemplo: Joaquín llegó tarde a la reunión porque sabe que me molesta la impuntualidad.
+
+**7. Demandas**
+
+La tendencia a establecer expectativas y demandas poco realistas sobre uno mismo, otros o las circunstancias.
+Ejemplo: Mis colegas deberían reconocer mi esfuerzo y darme las gracias.
+
+**8. Culpar**
+
+La tendencia a culpar a otras personas, a las circunstancias o a nosotros mismos por lo que nos sucede.
+Ejemplo: Nuestra mala comunicación con el cliente se debe a que el equipo no sabe bien qué le toca hacer.
+
+**9. Esto no va a cambiar**
+
+La tendencia a asumir que las situaciones o las personas son de determinada manera y no pueden cambiar.
+Ejemplo: La dinámica que tengo con mis colegas nunca va a cambiar.
+"""
 
 [abcd.direccion]
 title = "Dirección y motivación en desequilibrio"

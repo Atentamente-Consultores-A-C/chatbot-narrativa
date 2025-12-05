@@ -54,6 +54,7 @@ class LLMConfig:
         self.a_intro = config["abcd"]["atencion"]["intro"].strip()
         self.b_intro = config["abcd"]["bondad"]["intro"].strip()
         self.c_intro = config["abcd"]["claridad"]["intro"].strip()
+        self.serpents = config["abcd"]["claridad"]["serpents"].strip()
         self.d_intro = config["abcd"]["direccion"]["intro"].strip()
         self.a_prompt_template = self.generate_abcd_prompt_template(config["abcd"], "atencion")
         self.b_prompt_template = self.generate_abcd_prompt_template(config["abcd"], "bondad")
@@ -191,8 +192,8 @@ class LLMConfig:
 
         main_prompt_template += "Crea un escenario basado en estas respuestas.\n\n"
 
-        main_prompt_template += "Un poco de contexto sobre la situación de esta persona:\n\n"
-        main_prompt_template += "< {context} >\n\nSé consistente con sus pronombres.\n\n"
+        main_prompt_template += "Un poco de contexto sobre la situación de esta persona para que sepas de qué está hablando (toma de aquí sus pronombres también):\n\n"
+        main_prompt_template += "< {context} >.\n\n"
         main_prompt_template += (
             "Tu respuesta debe ser un archivo JSON con una sola entrada llamada 'output_scenario'."
         )
