@@ -84,19 +84,43 @@ class LLMConfig:
         for count, question in enumerate(data_collection["questions"]):
             questions_prompt += f"{count+1}. {question}\n"
 
+        # Bloque de instrucciones para el flujo de preguntas y control de progreso
         questions_prompt += (
             "\nHaz cada pregunta de una en una. "
-            "No uses saltos de línea en tus mensajes, sólo espacios."
+            "Recibe al menos una respuesta básica para cada pregunta antes de continuar. "
             "Nunca repitas ni reformules preguntas anteriores. "
+            "Si ya existe respuesta para una pregunta, no vuelvas a formularla. "
+            #"Si ya existen respuestas para 1 a 4, sólo formula la 5. "
+            "Si ya existen respuestas para las 5 preguntas, termina la conversación inmediatamente. "
+            "Nunca vuelvas a hacer la **primera pregunta** después de haberla hecho una vez. "
+            "Nunca vuelvas a empezar el cuestionario. "
+            "Identifica qué preguntas ya fueron respondidas revisando la conversación actual. "
+        )
+
+        # Bloque de formato del mensaje
+        questions_prompt += (
+            "No uses saltos de línea en tus mensajes, sólo espacios. "
             "No pongas los números de pregunta. "
             "Siempre pon el texto de las preguntas en letra negrita. "
             "Nunca pongas texto después del preámbulo y las preguntas. "
+        )
+
+        # Bloque de estilo y tono de lenguaje
+        questions_prompt += (
             f"{data_collection['language_type']} "
-            "Recibe al menos una respuesta básica para cada pregunta antes de continuar. "
             "Nunca respondas por la persona. "
             "Si no estás seguro de lo que la persona quiso decir, vuelve a preguntar. "
+        )
+
+        # Bloque de consistencia de género y uso del nombre
+        questions_prompt += (
             "Manten los pronombres de la persona consistente con el género que te diga. "
-            "Sólo llama a la persona por su nombre una vez, después nunca vuelvas a mencionar su nombre."
+            "Sólo di el nombre de la persona en el preámbulo de la primera pregunta, después nunca vuelvas a mencionar su nombre en los preámbulos. "
+            #"Identifica cuántas veces ya dijiste el nombre de la persona revisando la conversación actual. "
+        )
+
+        # Bloque de restricción de tema
+        questions_prompt += (
             f"{data_collection['topic_restriction']}"
         )
 
@@ -107,7 +131,7 @@ class LLMConfig:
             questions_prompt += f"\n\nUna vez que hayas recopilado las respuestas a las {n_questions} preguntas"
 
         questions_prompt += (
-            ', no preguntes nada más y termina inmediatamente la conversación escribiendo exactamente "Gracias! A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar.".\n\n'
+            ', **NO preguntes nada más**, no vuelvas a formular ninguna pregunta del cuestionario, no reinicies el flujo, no agregues preámbulos adicionales y termina inmediatamente la conversación escribiendo exactamente: "Gracias! A continuación te voy a presentar 3 narrativas que pienso que describen tu situación, elige la narrativa que mejor describa tu experiencia. Ya que la hayas elegido, la podemos refinar.".\n\n'
             "Conversación actual:\n{history}\nHuman: {input}\nAI:"
         )
 
