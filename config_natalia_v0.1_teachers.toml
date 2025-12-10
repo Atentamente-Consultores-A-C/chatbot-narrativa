@@ -127,25 +127,23 @@ Nunca menciones en la historia tal cual el nombre, el puesto y el género de la 
 # Este es el ejemplo único, separado en respuestas y escenario final
 [example]
 conversation = """
-Pregunta: ¿Qué es lo que encuentras más desafiante al impartir tu clase actualmente?
-Respuesta: Me siento ansiosa al estar frente a un grupo nuevo y grande, voy a dar clase al grupo más grande que he tenido.
-Pregunta: ¿Qué está sucediendo? Cuéntame un poco del escenario en este momento.
-Respuesta: Es un grupo grande de primero de primaria y hay varios niños que tienen problemas de aprendizaje y conducta.
-Pregunta: ¿Cuál es el contexto? ¿Qué más debería de saber sobre la situación?
-Respuesta: Llevo dos años dando clases pero con grupos más chicos y ahora me asignaron un grupo grande y difícil. La directora me dijo que necesitaba ayuda y no le supe decir que no.
-Pregunta: ¿Cómo te hizo sentir esto y cómo reaccionaste?
-Respuesta: Primero me sentía emocionada, pero luego al ver que era un grupo grande y con muchos niños y niñas con problemas me sentí abrumada. Aunque me preparo siento que no estoy dando el ancho.
-Pregunta: ¿Cuál es la parte más difícil de la situación?
-Respuesta: Me siento con pocos recursos para enfrentar esto, pero no lo puedo abandonar porque ya me comprometí con la directora y con los niños. Estoy súper angustiada.
+Pregunta: ¿Qué aspecto de tu trabajo como educadora te resulta más difícil en este momento?\n
+Respuesta: Me siento sobrecargada, es mucho el trabajo y siento que mi esfuerzo pasa desapercibido.\n
+Pregunta: ¿Puedes describir una situación reciente que lo ejemplifique?\n
+Respuesta: El ultimo par de semanas he tenido que trabajar muchas horas después de mi horario laboral, le meto mucho tiempo a planear mis clases también y mientras yo hago todo eso, siento que no es valorado.\n
+Pregunta: ¿Hay más detalles que me quieras contar para entender mejor la situación?\n
+Respuesta: Le he dicho a la directora que es mucho, pero me dice que me acostumbraré\n
+Pregunta: ¿Qué emociones te generó esta situación y cómo actuaste ante ellas?\n
+Respuesta: Frustrada y triste, me hace pensar en cambiar de trabajo, no sé si valga la pena el esfuerzo.\n
+Pregunta: ¿Qué parte de esta situación te ha sido más difícil de manejar?\n
+Respuesta: Sentirme sola.
 """
 scenario = """
-Me siento muy ansiosa por enfrentarme al grupo más grande y desafiante que me ha tocado hasta ahora. \
-Se trata de un grupo de primero de primaria con muchos niños que presentan problemas de aprendizaje y conducta. \
-Aunque tengo dos años de experiencia dando clases, siempre he trabajado con grupos más pequeños. \
-Acepté esta asignación porque la directora me dijo que necesitaba ayuda, y no supe cómo negarme. \
-Al principio me emocionaba el reto, pero conforme fui conociendo al grupo, me fui sintiendo cada vez más abrumada. \
-A pesar de prepararme, siento que no estoy dando el ancho y que no tengo suficientes recursos para lidiar con la situación. \
-Me angustia mucho no poder soltar este compromiso, tanto con la directora como con los niños, pero me siento sobrepasada.
+Me siento muy sobrecargada en mi trabajo. \
+En las últimas semanas he tenido que quedarme muchas horas después de mi horario para planear mis clases, y aunque pongo mucho esfuerzo, siento que nadie lo valora. \
+Le he comentado a la directora que es demasiado, pero ella solo me dice que me acostumbraré. \
+Esto me hace sentir frustrada y triste, hasta el punto de pensar en cambiar de trabajo porque no sé si vale la pena tanto esfuerzo. \
+Lo que más me pesa es sentirme sola en todo esto, como si nadie entendiera lo difícil que es para mí.
 """
 
 
