@@ -6,9 +6,11 @@ __pycache__/
 dist/
 build/
 test.py
+documents/
 
 # Virtual environment
 .venv/
+.venv_bot/
 
 # Streamlit secrets
 .streamlit/secrets.toml
@@ -23,3 +25,7 @@ Thumbs.db
 
 #Google API
 service_account.json
+
+# Secrets
+.env
+bot/.env
