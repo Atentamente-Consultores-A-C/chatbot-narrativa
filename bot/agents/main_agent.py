@@ -12,7 +12,7 @@ from bot.prompts.phases import (
     WELCOME_MESSAGE,
 )
 from bot.rag.retriever import retrieve_knowledge_context
-from bot.rag.style_context import get_style_context
+from bot.rag.style_context import get_style_context, get_behavior_context
 from bot.db.lessons import get_relevant_lessons
 
 MAIN_MODEL = "gpt-4.1-mini"
@@ -65,8 +65,11 @@ async def _generate_phase_opener(
         imbalance = session.get("collected_data", {}).get("main_imbalance", "")
         rag_ctx = retrieve_knowledge_context(imbalance or "desequilibrio mental práctica meditativa")
 
+    style = get_style_context()
+    if next_phase == 4:
+        style = (style + "\n\n" + get_behavior_context()).strip()
     system = get_phase_system_prompt(
-        next_phase, session.get("collected_data", {}), rag_ctx, get_style_context()
+        next_phase, session.get("collected_data", {}), rag_ctx, style
     )
     opening_instruction = PHASE_OPENING_PROMPTS.get(next_phase, "Continúa fluidamente.")
 
@@ -113,6 +116,9 @@ async def process_message(
         rag_ctx = retrieve_knowledge_context(query)
 
     style_ctx = get_style_context()
+    # Lineamientos de comportamiento socrático solo en fase 4
+    if phase == 4:
+        style_ctx = (style_ctx + "\n\n" + get_behavior_context()).strip()
     system = get_phase_system_prompt(phase, collected, rag_ctx, style_ctx) + lessons_block
 
     raw_reply = await _call_llm(system, history, user_message)
