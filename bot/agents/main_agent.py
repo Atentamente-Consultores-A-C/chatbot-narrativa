@@ -127,16 +127,17 @@ async def process_message(
     next_phase_opener = ""
     if phase_done and not conv_done:
         next_phase = phase + 1
-        if next_phase <= 5:
+        # Para fase 5 (cierre), NO concatenar el opener al mensaje actual.
+        # El cierre se genera solo cuando el usuario vuelve a escribir ya en fase 5.
+        if next_phase <= 4:
             next_history = history + [
                 {"role": "user", "content": user_message},
                 {"role": "assistant", "content": reply},
             ]
-            # Enriquecer sesión con datos extraídos antes de generar el opener
             opener = await _generate_phase_opener(next_phase, session, next_history)
             next_phase_opener = opener
 
-    # Combinar respuesta actual + apertura de la siguiente fase
+    # Combinar respuesta actual + apertura de la siguiente fase (solo fases 2-4)
     full_reply = reply
     if next_phase_opener:
         full_reply = (reply + "\n\n" + next_phase_opener).strip() if reply else next_phase_opener

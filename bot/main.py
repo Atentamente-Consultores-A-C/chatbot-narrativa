@@ -53,7 +53,19 @@ async def webhook(request: Request):
         raise HTTPException(status_code=400, detail="Faltan campos requeridos")
 
     reply = await handle_message(whatsapp_id, contact_name, user_message)
+    if not reply:
+        return JSONResponse({})  # Turn.io no envía nada si no hay "reply"
     return JSONResponse({"reply": reply})
+
+
+_GREETINGS = {
+    "hola", "buenas", "buenos días", "buenos dias", "buenas tardes", "buenas noches",
+    "hey", "hi", "hello", "qué tal", "que tal", "saludos", "buen día", "buen dia",
+}
+
+def _is_greeting(text: str) -> bool:
+    normalized = text.lower().strip("!¡?¿.,")
+    return any(normalized.startswith(g) for g in _GREETINGS)
 
 
 async def handle_message(whatsapp_id: str, contact_name: str, user_message: str) -> str:
@@ -62,12 +74,17 @@ async def handle_message(whatsapp_id: str, contact_name: str, user_message: str)
     session_id = session["id"]
     phase = session["phase"]
 
-    # Conversación terminada — iniciar nueva desde fase 1
+    # Conversación terminada — solo reactivar si el usuario saluda
     if phase > 5:
-        update_session(session_id, {"phase": 1, "collected_data": {}})
-        session["phase"] = 1
-        session["collected_data"] = {}
-        phase = 1
+        if _is_greeting(user_message):
+            update_session(session_id, {"phase": 1, "collected_data": {}})
+            session["phase"] = 1
+            session["collected_data"] = {}
+            phase = 1
+            save_message(session_id, "assistant", WELCOME_MESSAGE, 1)
+            return WELCOME_MESSAGE
+        else:
+            return ""  # no responder a despedidas o agradecimientos post-cierre
 
     history = get_history(session_id)
 

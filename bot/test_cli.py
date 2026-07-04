@@ -50,8 +50,10 @@ async def run_cli():
 
         if user_input.lower() == "reset":
             from bot.db.sessions import get_or_create_session, update_session
+            from bot.db.client import get_supabase
             session = get_or_create_session(TEST_WHATSAPP_ID)
             update_session(session["id"], {"phase": 1, "collected_data": {}})
+            get_supabase().table("messages").delete().eq("session_id", session["id"]).execute()
             print("🔄 Sesión reiniciada.\n")
             welcome = await handle_message(TEST_WHATSAPP_ID, TEST_NAME, "__init__")
             print(f"\n🤖 Bot:\n{welcome}\n")
@@ -62,7 +64,8 @@ async def run_cli():
 
         print("   [procesando...]")
         reply = await handle_message(TEST_WHATSAPP_ID, TEST_NAME, user_input)
-        print(f"\n🤖 Bot:\n{reply}\n")
+        if reply:
+            print(f"\n🤖 Bot:\n{reply}\n")
 
 
 if __name__ == "__main__":
