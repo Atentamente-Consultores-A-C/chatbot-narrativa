@@ -6,8 +6,9 @@ Uso:
 
 Comandos especiales durante la conversación:
   salir          -> termina el CLI
-  debugg: reset  -> resetea la sesión (nueva conversación, mismo ID)
+  debugg: reset  -> resetea fase y collected_data (conserva historial)
   debugg: end    -> marca la conversación como terminada (phase 6)
+  debugg: clear  -> borra el historial de mensajes y resetea la sesión
 """
 import asyncio
 import sys

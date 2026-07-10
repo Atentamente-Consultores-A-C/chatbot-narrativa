@@ -19,7 +19,7 @@ load_dotenv()
 
 from bot.rag.style_context import get_style_context
 from bot.db.sessions import get_or_create_session, update_session, advance_phase, update_collected_data
-from bot.db.messages import save_message, get_history
+from bot.db.messages import save_message, get_history, delete_messages
 from bot.agents.main_agent import process_message, WELCOME_MESSAGE
 from bot.agents.supervisor import evaluate_response
 
@@ -123,8 +123,14 @@ async def handle_message(whatsapp_id: str, contact_name: str, user_message: str)
             update_session(session_id, {"phase": 6, "collected_data": {}})
             print(f"[Debug] Conversación terminada para {whatsapp_id}")
             return ""
+        elif debug_cmd == "clear":
+            delete_messages(session_id)
+            update_session(session_id, {"phase": 1, "collected_data": {}})
+            save_message(session_id, "assistant", WELCOME_MESSAGE, 1)
+            print(f"[Debug] Historial borrado para {whatsapp_id}")
+            return WELCOME_MESSAGE
         else:
-            return f"[Debug] Comando desconocido: {debug_cmd!r}. Comandos disponibles: reset, end"
+            return f"[Debug] Comando desconocido: {debug_cmd!r}. Comandos disponibles: reset, end, clear"
 
     # Despedidas durante la conversación activa — cerrar con mensaje breve
     if phase <= 5 and _is_farewell(user_message):
