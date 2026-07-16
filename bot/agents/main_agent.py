@@ -30,9 +30,6 @@ def _get_openai() -> AsyncOpenAI:
 
 
 def _strip_signals(text: str) -> tuple[str, bool, bool]:
-    """
-    Retorna (texto_limpio, fase_completa, conversacion_completa).
-    """
     fin_conv = FIN_CONV in text
     fin_fase = FIN_FASE in text or fin_conv
     clean = text.replace(FIN_FASE, "").replace(FIN_CONV, "").strip()
@@ -40,7 +37,6 @@ def _strip_signals(text: str) -> tuple[str, bool, bool]:
 
 
 async def _call_llm(system: str, history: list[dict], user_message: str | None = None) -> str:
-    """Llama al modelo. Si user_message es None, usa history tal cual."""
     messages = [{"role": "system", "content": system}] + history
     if user_message:
         messages.append({"role": "user", "content": user_message})
@@ -59,15 +55,19 @@ async def _generate_phase_opener(
     session: dict,
     history: list[dict],
 ) -> str:
-    """Genera el primer mensaje de la siguiente fase."""
     rag_ctx = ""
     if next_phase == 4:
         imbalance = session.get("collected_data", {}).get("main_imbalance", "")
-        rag_ctx = retrieve_knowledge_context(imbalance or "desequilibrio mental práctica meditativa")
+        rag_ctx = await asyncio.to_thread(
+            retrieve_knowledge_context,
+            imbalance or "desequilibrio mental práctica meditativa",
+        )
 
-    style = get_style_context()
+    style = await asyncio.to_thread(get_style_context)
     if next_phase == 4:
-        style = (style + "\n\n" + get_behavior_context()).strip()
+        behavior = await asyncio.to_thread(get_behavior_context)
+        style = (style + "\n\n" + behavior).strip()
+
     system = get_phase_system_prompt(
         next_phase, session.get("collected_data", {}), rag_ctx, style
     )
@@ -86,17 +86,31 @@ async def process_message(
     """
     Procesa un mensaje del usuario y retorna:
     {
-      "reply": str,           # texto a enviar al usuario
-      "phase_advanced": bool, # si la fase cambió
+      "reply": str,
+      "phase_advanced": bool,
       "conversation_ended": bool,
       "lessons_used": list,
+      "raw_reply_for_evaluation": str,
     }
     """
     phase = session.get("phase", 1)
     collected = session.get("collected_data", {})
 
-    # Recuperar lecciones relevantes
-    lessons = get_relevant_lessons(user_message)
+    # Recuperar lecciones, RAG y style en paralelo para reducir latencia
+    lessons_task = asyncio.to_thread(get_relevant_lessons, user_message)
+    style_task = asyncio.to_thread(get_style_context)
+
+    if phase == 4:
+        imbalance = collected.get("main_imbalance", "")
+        query = f"{imbalance} práctica meditativa {user_message}"
+        rag_task = asyncio.to_thread(retrieve_knowledge_context, query)
+        lessons, rag_ctx, style_ctx = await asyncio.gather(lessons_task, rag_task, style_task)
+        behavior = await asyncio.to_thread(get_behavior_context)
+        style_ctx = (style_ctx + "\n\n" + behavior).strip()
+    else:
+        lessons, style_ctx = await asyncio.gather(lessons_task, style_task)
+        rag_ctx = ""
+
     lessons_block = ""
     if lessons:
         lines = [
@@ -108,17 +122,6 @@ async def process_message(
             + "\n\n".join(lines)
         )
 
-    # Contexto RAG: fase 4 usa conocimiento de cursos + ejemplos de conversación
-    rag_ctx = ""
-    if phase == 4:
-        imbalance = collected.get("main_imbalance", "")
-        query = f"{imbalance} práctica meditativa {user_message}"
-        rag_ctx = retrieve_knowledge_context(query)
-
-    style_ctx = get_style_context()
-    # Lineamientos de comportamiento socrático solo en fase 4
-    if phase == 4:
-        style_ctx = (style_ctx + "\n\n" + get_behavior_context()).strip()
     system = get_phase_system_prompt(phase, collected, rag_ctx, style_ctx) + lessons_block
 
     raw_reply = await _call_llm(system, history, user_message)
@@ -127,8 +130,6 @@ async def process_message(
     next_phase_opener = ""
     if phase_done and not conv_done:
         next_phase = phase + 1
-        # Para fase 5 (cierre), NO concatenar el opener al mensaje actual.
-        # El cierre se genera solo cuando el usuario vuelve a escribir ya en fase 5.
         if next_phase <= 4:
             next_history = history + [
                 {"role": "user", "content": user_message},
@@ -137,7 +138,6 @@ async def process_message(
             opener = await _generate_phase_opener(next_phase, session, next_history)
             next_phase_opener = opener
 
-    # Combinar respuesta actual + apertura de la siguiente fase (solo fases 2-4)
     full_reply = reply
     if next_phase_opener:
         full_reply = (reply + "\n\n" + next_phase_opener).strip() if reply else next_phase_opener
