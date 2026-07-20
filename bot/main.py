@@ -63,7 +63,9 @@ async def webhook(request: Request):
     async with _get_user_lock(whatsapp_id):
         reply = await handle_message(whatsapp_id, contact_name, user_message)
 
-    if not reply:
+    # None = ignorar el mensaje (templates inválidos, debugg: end)
+    # Siempre incluir la clave "reply" para que Turn.io no renderice "@api_response.body.reply"
+    if reply is None:
         return JSONResponse({})
     return JSONResponse({"reply": reply})
 
@@ -116,7 +118,7 @@ async def handle_message(whatsapp_id: str, contact_name: str, user_message: str)
 
     if _is_invalid_template(user_message):
         print(f"[Warning] Mensaje con template sin resolver ignorado: {user_message!r}")
-        return ""
+        return None
 
     # Comandos de debug — no se guardan en historial
     debug_cmd = _parse_debug_command(user_message)
@@ -129,7 +131,7 @@ async def handle_message(whatsapp_id: str, contact_name: str, user_message: str)
         elif debug_cmd == "end":
             await asyncio.to_thread(update_session, session_id, {"phase": 6, "collected_data": {}})
             print(f"[Debug] Conversación terminada para {whatsapp_id}")
-            return ""
+            return None
         elif debug_cmd == "clear":
             await asyncio.to_thread(delete_messages, session_id)
             await asyncio.to_thread(update_session, session_id, {"phase": 1, "collected_data": {}})
@@ -155,7 +157,7 @@ async def handle_message(whatsapp_id: str, contact_name: str, user_message: str)
             await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, 1)
             return WELCOME_MESSAGE
         else:
-            return ""
+            return "Esta conversación ya terminó. Si quieres iniciar una nueva, escríbeme 'Hola'."
 
     history = await asyncio.to_thread(get_history, session_id)
 
@@ -167,11 +169,12 @@ async def handle_message(whatsapp_id: str, contact_name: str, user_message: str)
         first_bot = next((m["content"] for m in history if m["role"] == "assistant"), WELCOME_MESSAGE)
         return first_bot
 
-    # Primera vez que el usuario escribe desde Turn.io (sin historial previo):
-    # guarda la bienvenida y procesa su mensaje en lugar de descartarlo.
+    # Primera vez que el usuario escribe (sin historial previo): mostrar bienvenida.
+    # El trigger de Turn.io puede ser cualquier mensaje; la bienvenida ya tiene la
+    # pregunta de apertura, así que el usuario responderá a ella naturalmente.
     if not history:
         await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, phase)
-        history = [{"role": "assistant", "content": WELCOME_MESSAGE}]
+        return WELCOME_MESSAGE
 
     # Guardar mensaje del usuario
     await asyncio.to_thread(save_message, session_id, "user", user_message, phase)
