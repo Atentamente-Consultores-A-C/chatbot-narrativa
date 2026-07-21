@@ -21,6 +21,7 @@ from bot.rag.style_context import get_style_context
 from bot.db.sessions import get_or_create_session, update_session
 from bot.db.messages import save_message, get_history, delete_messages
 from bot.agents.main_agent import process_message, WELCOME_MESSAGE
+from bot.prompts.phases import get_welcome_message
 from bot.agents.supervisor import evaluate_response
 
 # Lock por usuario — evita procesar dos mensajes simultáneos del mismo número
@@ -154,8 +155,9 @@ async def handle_message(whatsapp_id: str, contact_name: str, user_message: str)
             session["phase"] = 1
             session["collected_data"] = {}
             phase = 1
-            await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, 1)
-            return WELCOME_MESSAGE
+            welcome = get_welcome_message(session.get("contact_name"))
+            await asyncio.to_thread(save_message, session_id, "assistant", welcome, 1)
+            return welcome
         else:
             return "Esta conversación ya terminó. Si quieres iniciar una nueva, escríbeme 'Hola'."
 
