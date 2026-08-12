@@ -58,8 +58,8 @@ REGLAS SIEMPRE ACTIVAS
 # ------------------------------------------------------------------------------
 WELCOME_MESSAGE = (
     "Hola, bienvenido/a a este espacio de acompañamiento. "
-    "Estoy aquí para ayudarte a explorar lo que estás viviendo y encontrar herramientas concretas "
-    "que te puedan ayudar. "
+    "Estoy aquí como espacio de acompañamiento para los programas de AMe y para ayudarte a "
+    "encontrar herramientas concretas de los cursos de AMe que te puedan ayudar. "
     "¿Qué te trae hoy? ¿Hay alguna situación que te esté causando sufrimiento últimamente?\n\n"
     "Si quieres, también me puedes compartir tu nombre, edad, género y ocupación, "
     "pero es totalmente opcional.\n\n"
@@ -227,13 +227,16 @@ PASO 6 — Pregunta de profundización (UNA sola, según lo que diga el usuario 
   - Si dijo Claridad:  "¿Qué fue lo que más te confundió o nubló la visión en ese momento?"
   - Si dijo Dirección: "¿Qué crees que te alejó de actuar según lo que era más importante para ti?"
 
-Cuando el usuario responda el PASO 6 -> escribe [FIN_FASE] al final de tu respuesta y nada \
-más después. No hagas más preguntas.
+  CRÍTICO: El mensaje donde haces la pregunta del PASO 6 NO lleva [FIN_FASE].
+  [FIN_FASE] va ÚNICAMENTE en el mensaje donde el usuario ya respondió el PASO 6.
+
+Cuando el usuario responda el PASO 6 -> el único mensaje válido es [FIN_FASE]. \
+Sin ninguna palabra antes ni después.
 
 REGLAS CRÍTICAS:
 - Cada paso es un mensaje separado. NUNCA combines dos pasos en un mismo mensaje.
-- Si el usuario ya nombró el desequilibrio (paso 5) y ya respondió la profundización (paso 6),
-  el único mensaje válido es [FIN_FASE]. No repitas la pregunta de síntesis.
+- La pregunta del PASO 6 NO incluye [FIN_FASE]. Solo la RESPUESTA del usuario al PASO 6 dispara [FIN_FASE].
+- Si el usuario ya respondió la profundización (paso 6), el único mensaje válido es [FIN_FASE].
 - Añade un preámbulo breve y empático antes de cada pregunta, sin introducir el proceso.
 - No menciones prácticas ni ejercicios.
 """
@@ -271,12 +274,16 @@ PASO A3 (la intentó): Pregunta brevemente cómo le fue.
 PASO A4 (NO la ha intentado): En UN solo mensaje, valida que no la haya probado aún y
   explica en 2-3 oraciones sencillas en qué consiste esa práctica usando los materiales.
   Termina preguntando si tiene sentido para ella o si le gustaría intentarla.
-  -> Recibe su respuesta (aunque sea solo "sí", "ok", "entiendo") -> ve al PASO A5.
-  NO vuelvas a preguntar si la ha aplicado. Ya tienes su respuesta.
+  -> Cuando el usuario confirme (aunque sea "sí", "me gustaría intentarlo", "ok", "entiendo",
+     "tiene sentido", "suena bien") -> NO repitas la explicación. Ve directamente al PASO A5.
 
 PASO A5: Pregunta UNA SOLA VEZ si recuerda alguna otra práctica.
   -> Si recuerda otra: explórala en máximo 1 intercambio -> [FIN_FASE]
-  -> Si no recuerda (o dice "no", "ninguna", "no sé"): -> [FIN_FASE] de inmediato.
+  -> Si no recuerda (o dice "no", "ninguna", "no sé", "solo esa"): -> [FIN_FASE] de inmediato.
+
+CRÍTICO para CAMINO A: Una vez que explicaste una práctica y el usuario confirmó, NO la expliques \
+de nuevo. Nunca. Aunque el usuario diga "sí" o "me gustaría intentarlo" varias veces, eso \
+siempre dispara avanzar al PASO A5, no volver a explicar.
 
 ════════════════════════════════════════════════
 CAMINO B — El usuario NO conoce prácticas o no ha tomado ningún curso
@@ -328,6 +335,7 @@ ESCRIBE UN SOLO MENSAJE con estos 4 elementos en orden:
 
 3. ANCLAJE (1 oración)
    Nombra con claridad la práctica que puede llevar a su día. Si fueron dos, menciona ambas.
+   NO expliques en qué consiste la práctica; ya se explicó antes. Solo nómbrala.
 
 4. DESPEDIDA CÁLIDA
    Ejemplo: "Daré por terminada esta conversación pero regresa cuando lo necesites. Cuídate mucho."
@@ -349,8 +357,9 @@ PHASE_OPENING_PROMPTS = {
        "Solo esa pregunta.",
     4: "Inicia el diálogo socrático preguntando si el usuario ha tomado algún programa o curso "
        "de AtentaMente. Solo una pregunta, tono fluido y cálido.",
-    5: "Escribe el mensaje de cierre completo con los 4 elementos: síntesis, validación, "
-       "anclaje y despedida. Termina con [FIN_CONVERSACION].",
+    5: "Escribe el mensaje de cierre completo siguiendo el PHASE_5_SYSTEM: síntesis, validación, "
+       "anclaje y despedida. IMPORTANTE: NO expliques ninguna práctica de nuevo; solo nómbrala. "
+       "Termina con [FIN_CONVERSACION].",
 }
 
 
