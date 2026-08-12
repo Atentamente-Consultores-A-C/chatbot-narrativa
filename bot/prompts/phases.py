@@ -116,9 +116,10 @@ PASO 5 — Confirmación (máximo 3 rondas de corrección):
 ajuste a la paráfrasis (revisa el historial de la conversación). No cuentes la primera \
 paráfrasis del PASO 4 como una ronda.
 
-  -> Si el usuario confirma con cualquier variante de "sí", "es buena", "correcto", \
-     "así es", "sí se parece": tu ÚNICO mensaje válido es [FIN_FASE]. Sin ninguna \
-     otra palabra antes ni después.
+  -> Si el usuario confirma con cualquier variante de "sí", "es buena", "correcto",
+     "así es", "sí se parece", "exacto", "perfecto", "continúa", "continuemos",
+     "adelante", "está bien", "de acuerdo", "ok": tu ÚNICO mensaje válido es
+     [FIN_FASE]. Sin ninguna otra palabra antes ni después.
 
   -> Si el usuario corrige algo (ronda 1 o 2 de corrección):
      Identifica exactamente qué señaló como incorrecto, incompleto o mal interpretado. \

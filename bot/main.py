@@ -64,9 +64,10 @@ async def webhook(request: Request):
     async with _get_user_lock(whatsapp_id):
         reply = await handle_message(whatsapp_id, contact_name, user_message)
 
-    # None = ignorar el mensaje (templates inválidos, debugg: end)
-    # Siempre incluir la clave "reply" para que Turn.io no renderice "@api_response.body.reply"
-    if reply is None:
+    # None o "" = no hay respuesta que mostrar.
+    # Devolver {} sin clave "reply" — Turn.io no renderiza nada si el campo está ausente
+    # (si se devuelve {"reply": ""} Turn.io puede mostrar "@api_response.body.reply" literal).
+    if not reply:
         return JSONResponse({})
     return JSONResponse({"reply": reply})
 
@@ -88,7 +89,7 @@ _FAREWELLS = {
     "salir",
 }
 
-_UNRESOLVED_TEMPLATE = re.compile(r"@event\.|@contact\.|{{.*?}}")
+_UNRESOLVED_TEMPLATE = re.compile(r"@event\.|@contact\.|{{.*?}}|Starting preview\.\.\.")
 
 def _is_greeting(text: str) -> bool:
     normalized = text.lower().strip("!¡?¿., ")

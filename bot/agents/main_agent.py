@@ -142,6 +142,17 @@ async def process_message(
     if next_phase_opener:
         full_reply = (reply + "\n\n" + next_phase_opener).strip() if reply else next_phase_opener
 
+    # Si el modelo emitió solo [FIN_FASE] sin texto (full_reply vacío) y no hay opener,
+    # no avanzamos la fase y pedimos al usuario que reintente.
+    if not full_reply:
+        return {
+            "reply": "Lo siento, tuve un problema procesando tu mensaje. ¿Puedes intentarlo de nuevo?",
+            "phase_advanced": False,
+            "conversation_ended": False,
+            "lessons_used": lessons,
+            "raw_reply_for_evaluation": raw_reply,
+        }
+
     return {
         "reply": full_reply,
         "phase_advanced": phase_done,
