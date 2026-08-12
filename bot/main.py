@@ -49,12 +49,33 @@ async def health():
 
 @app.post("/webhook")
 async def webhook(request: Request):
+    raw = await request.body()
+
     try:
         body = await request.json()
     except Exception:
-        raise HTTPException(status_code=400, detail="JSON invalido")
+        # JSON inválido — el mensaje probablemente contiene comillas dobles u otros
+        # caracteres especiales que Turn.io no escapó al construir el body.
+        # Intentamos extraer los campos con regex para no perder el mensaje.
+        raw_str = raw.decode("utf-8", errors="replace")
+        print(f"[Warning] JSON inválido, intentando extracción por regex: {raw_str[:300]}")
+        wid = re.search(r'"whatsapp_id"\s*:\s*"([^"]+)"', raw_str)
+        name = re.search(r'"contact_name"\s*:\s*"([^"]*)"', raw_str)
+        # Intentamos dos formatos: message antes o después de whatsapp_id
+        msg_match = re.search(
+            r'"message"\s*:\s*"(.*?)",\s*"whatsapp_id"', raw_str, re.DOTALL
+        ) or re.search(
+            r'"message"\s*:\s*"(.*?)"\s*\}', raw_str, re.DOTALL
+        )
+        if not wid:
+            return JSONResponse({"reply": "Lo siento, hubo un error procesando tu mensaje. ¿Puedes intentarlo de nuevo?"})
+        body = {
+            "whatsapp_id": wid.group(1),
+            "contact_name": name.group(1) if name else "",
+            "message": msg_match.group(1).replace('\\"', '"') if msg_match else "",
+        }
 
-    whatsapp_id = body.get("whatsapp_id", "").strip()
+    whatsapp_id = (body.get("whatsapp_id") or "").strip()
     contact_name = body.get("contact_name", "")
     user_message = (body.get("message") or "").strip()
 
