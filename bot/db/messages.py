@@ -24,8 +24,9 @@ def get_history(session_id: str, limit: int = 40) -> list[dict]:
         sb.table("messages")
         .select("role, content, created_at")
         .eq("session_id", session_id)
-        .order("created_at", desc=False)
+        .order("created_at", desc=True)
         .limit(limit)
         .execute()
     )
-    return [{"role": m["role"], "content": m["content"]} for m in result.data]
+    messages = [{"role": m["role"], "content": m["content"]} for m in result.data]
+    return list(reversed(messages))
