@@ -62,6 +62,44 @@ La aplicación debe enviar este JSON en cada turno:
 | `whatsapp_id` | string | Sí | Identificador único y estable del usuario. Determina a qué conversación pertenece el mensaje. |
 | `contact_name` | string | No | Nombre para personalizar la conversación. Puede enviarse como `""`. Solo se guarda al crear la sesión. |
 | `message` | string | Sí | Mensaje de texto del usuario. No puede quedar vacío después de quitar espacios. |
+| `context` | object | No | Datos libres del usuario (nombre de curso, requisitos pendientes, etc.). Ver [El campo `context`](#el-campo-context) abajo. |
+
+### El campo `context`
+
+`context` es un objeto JSON sin esquema fijo: cualquier clave que se envíe se guarda asociada al `whatsapp_id` y se conserva entre turnos, sin necesidad de cambios en el backend cada vez que se agrega una clave nueva.
+
+```json
+{
+  "whatsapp_id": "web:usuario-8f1a2c",
+  "contact_name": "María",
+  "message": "DUDAS SOBRE EL CURSO",
+  "context": {
+    "course_name": "ABCD Nivel 1",
+    "enrollment_status": "activo"
+  }
+}
+```
+
+Reglas:
+
+- Es opcional; si no se envía o no es un objeto JSON, se ignora.
+- Las claves que se manden se mezclan (merge superficial) con lo que ya se tenía guardado — no hace falta reenviar todas las claves en cada turno, solo las que cambiaron.
+- Es compartido entre los 3 bots (apoyo emocional, dudas sobre el curso, dudas sobre el contenido) porque describe al usuario, no a una conversación en particular.
+- Todavía no hay una lista fija de claves esperadas: cada bot leerá las que necesite a medida que se implemente.
+
+### Los 3 bots y cómo se elige uno
+
+El bot ya no es uno solo: el primer mensaje de cada conversación debe ser exactamente una de estas 3 etiquetas (normalmente presentadas como botones antes de llegar al webhook; se aceptan sin distinguir mayúsculas/minúsculas ni acentos):
+
+- `APOYO EMOCIONAL` — el flujo de acompañamiento de siempre (5 fases).
+- `DUDAS SOBRE EL CURSO` — todavía no implementado.
+- `DUDAS SOBRE EL CONTENIDO` — todavía no implementado.
+
+Comportamiento:
+
+- Si el mensaje coincide con una de las 3 etiquetas, esa pasa a ser la conversación activa para ese `whatsapp_id`. Cada una de las 3 mantiene su propio historial y estado, independiente de las otras — un mismo usuario puede tener una conversación de apoyo emocional en curso y, en otro momento, elegir "dudas sobre el curso" sin perder el progreso de la primera.
+- Si el mensaje no coincide con ninguna etiqueta, se usa la conversación activa más reciente para ese usuario; si nunca eligió ninguna, se asume `APOYO EMOCIONAL`.
+- `DUDAS SOBRE EL CURSO` y `DUDAS SOBRE EL CONTENIDO` responden una sola vez con un mensaje fijo de "no disponible todavía" y después ya no responden nada más, hasta que el usuario vuelva a mandar explícitamente una de las 3 etiquetas.
 
 ### El campo `whatsapp_id` en aplicaciones que no usan WhatsApp
 
@@ -150,17 +188,19 @@ whatsapp_id = "web:" + UUID_GENERADO_UNA_SOLA_VEZ
 
 ### 2. Inicializar la conversación
 
-En una sesión que todavía no existe, la primera llamada crea la sesión y devuelve la bienvenida. El backend actual no procesa el contenido de ese primer mensaje como una respuesta conversacional.
+El primer mensaje de una conversación nueva debería ser una de las 3 etiquetas de bot (ver [Los 3 bots y cómo se elige uno](#los-3-bots-y-cómo-se-elige-uno)). El backend crea la sesión correspondiente y no procesa ese primer mensaje como una respuesta conversacional; solo decide qué bot atiende.
 
-Por ello, una app nueva debería inicializar el chat explícitamente:
+Por ello, una app nueva debería inicializar el chat explícitamente con una etiqueta válida:
 
 ```json
 {
   "whatsapp_id": "web:usuario-8f1a2c",
   "contact_name": "María",
-  "message": "Hola"
+  "message": "APOYO EMOCIONAL"
 }
 ```
+
+Si se envía cualquier otro texto (por ejemplo "Hola") como primer mensaje, el backend lo trata igual que si no hubiera elegido bot y asume `APOYO EMOCIONAL` por default — pero para las apps nuevas es más explícito y confiable mandar la etiqueta.
 
 La aplicación muestra el `reply` de bienvenida. A partir de la siguiente llamada, los mensajes ya se procesan dentro de la conversación.
 

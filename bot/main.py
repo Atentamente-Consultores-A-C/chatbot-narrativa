@@ -18,11 +18,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from bot.rag.style_context import get_style_context
+from bot.db.contacts import get_or_create_contact, update_contact, merge_contact_context
 from bot.db.sessions import get_or_create_session, update_session
 from bot.db.messages import save_message, get_history, delete_messages
 from bot.agents.main_agent import process_message, WELCOME_MESSAGE
+from bot.agents.stub_agent import UNAVAILABLE_MESSAGE
 from bot.prompts.phases import get_welcome_message
 from bot.agents.supervisor import evaluate_response
+from bot.bot_router import detect_bot_type, APOYO_EMOCIONAL
 
 # Lock por usuario — evita procesar dos mensajes simultáneos del mismo número
 _user_locks: dict[str, asyncio.Lock] = {}
@@ -78,12 +81,14 @@ async def webhook(request: Request):
     whatsapp_id = (body.get("whatsapp_id") or "").strip()
     contact_name = body.get("contact_name", "")
     user_message = (body.get("message") or "").strip()
+    raw_context = body.get("context")
+    context = raw_context if isinstance(raw_context, dict) else None
 
     if not whatsapp_id or not user_message:
         raise HTTPException(status_code=400, detail="Faltan campos requeridos")
 
     async with _get_user_lock(whatsapp_id):
-        reply = await handle_message(whatsapp_id, contact_name, user_message)
+        reply = await handle_message(whatsapp_id, contact_name, user_message, context)
 
     # None o "" = no hay respuesta que mostrar.
     # Devolver {} sin clave "reply" — Turn.io no renderiza nada si el campo está ausente
@@ -134,14 +139,42 @@ def _parse_debug_command(text: str) -> str | None:
 # Lógica central
 # ---------------------------------------------------------------------------
 
-async def handle_message(whatsapp_id: str, contact_name: str, user_message: str) -> str:
-    session = await asyncio.to_thread(get_or_create_session, whatsapp_id, contact_name)
-    session_id = session["id"]
-    phase = session["phase"]
-
+async def handle_message(
+    whatsapp_id: str,
+    contact_name: str,
+    user_message: str,
+    context: dict | None = None,
+) -> str | None:
     if _is_invalid_template(user_message):
         print(f"[Warning] Mensaje con template sin resolver ignorado: {user_message!r}")
         return None
+
+    contact = await asyncio.to_thread(get_or_create_contact, whatsapp_id, contact_name)
+    if context:
+        await asyncio.to_thread(merge_contact_context, whatsapp_id, contact, context)
+
+    # El usuario elige el bot enviando la etiqueta exacta (vía menú de Turn.io).
+    # Si no elige ninguna, se queda con el bot activo previamente o, a falta de
+    # uno, con apoyo emocional por default.
+    matched_bot_type = detect_bot_type(user_message)
+    active_bot_type = matched_bot_type or contact.get("active_bot_type") or APOYO_EMOCIONAL
+    if contact.get("active_bot_type") != active_bot_type:
+        await asyncio.to_thread(update_contact, whatsapp_id, {"active_bot_type": active_bot_type})
+
+    session = await asyncio.to_thread(get_or_create_session, whatsapp_id, active_bot_type, contact_name)
+    session_id = session["id"]
+    phase = session["phase"]
+
+    # Bots todavía no implementados: una sola respuesta fija y la conversación
+    # queda cerrada — no se procesa ni se responde nada más hasta que el usuario
+    # vuelva a elegir explícitamente uno de los 3 bots.
+    if active_bot_type != APOYO_EMOCIONAL:
+        if not matched_bot_type:
+            return None
+        await asyncio.to_thread(save_message, session_id, "user", user_message, phase)
+        await asyncio.to_thread(save_message, session_id, "assistant", UNAVAILABLE_MESSAGE, phase)
+        await asyncio.to_thread(update_session, session_id, {"phase": 6})
+        return UNAVAILABLE_MESSAGE
 
     # Comandos de debug — no se guardan en historial
     debug_cmd = _parse_debug_command(user_message)

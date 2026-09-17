@@ -1,9 +1,17 @@
 from .client import get_supabase
 
 
-def get_or_create_session(whatsapp_id: str, contact_name: str | None = None) -> dict:
+def get_or_create_session(whatsapp_id: str, bot_type: str, contact_name: str | None = None) -> dict:
+    """Una sesión por combinación (whatsapp_id, bot_type): cada uno de los 3 bots
+    mantiene su propia conversación independiente para el mismo usuario."""
     sb = get_supabase()
-    result = sb.table("sessions").select("*").eq("whatsapp_id", whatsapp_id).execute()
+    result = (
+        sb.table("sessions")
+        .select("*")
+        .eq("whatsapp_id", whatsapp_id)
+        .eq("bot_type", bot_type)
+        .execute()
+    )
 
     if result.data:
         return result.data[0]
@@ -11,6 +19,7 @@ def get_or_create_session(whatsapp_id: str, contact_name: str | None = None) -> 
     new_session = {
         "whatsapp_id": whatsapp_id,
         "contact_name": contact_name,
+        "bot_type": bot_type,
         "phase": 1,
         "research_consent": None,
         "collected_data": {},

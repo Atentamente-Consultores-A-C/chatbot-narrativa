@@ -62,6 +62,44 @@ The application must send this JSON payload on every turn:
 | `whatsapp_id` | string | Yes | A unique, stable identifier for the user. It determines which conversation receives the message. |
 | `contact_name` | string | No | A name used to personalize the conversation. It may be sent as `""`. It is stored only when the session is created. |
 | `message` | string | Yes | The user's text message. It cannot be empty after whitespace is removed. |
+| `context` | object | No | Free-form user data (course name, pending requirements, etc). See [The `context` field](#the-context-field) below. |
+
+### The `context` field
+
+`context` is a schemaless JSON object: whatever keys are sent get stored against the `whatsapp_id` and persist across turns, with no backend changes required whenever a new key is introduced.
+
+```json
+{
+  "whatsapp_id": "web:user-8f1a2c",
+  "contact_name": "Maria",
+  "message": "DUDAS SOBRE EL CURSO",
+  "context": {
+    "course_name": "ABCD Level 1",
+    "enrollment_status": "active"
+  }
+}
+```
+
+Rules:
+
+- It is optional; if it is omitted or is not a JSON object, it is ignored.
+- Keys sent are shallow-merged with whatever was already stored — there is no need to resend every key on every turn, only the ones that changed.
+- It is shared across all 3 bots (emotional support, course questions, content questions) because it describes the user, not one specific conversation.
+- There is no fixed list of expected keys yet; each bot will read whichever ones it needs as it gets built out.
+
+### The 3 bots and how one gets selected
+
+The bot is no longer a single flow: the first message of every conversation must be exactly one of these 3 labels (normally presented as buttons before the webhook is called; matching ignores case and accents):
+
+- `APOYO EMOCIONAL` — the existing emotional-support flow (5 phases).
+- `DUDAS SOBRE EL CURSO` — not implemented yet.
+- `DUDAS SOBRE EL CONTENIDO` — not implemented yet.
+
+Behavior:
+
+- If the message matches one of the 3 labels, that becomes the active conversation for that `whatsapp_id`. Each of the 3 keeps its own history and state, independent of the others — the same user can have an ongoing emotional-support conversation and, at a later point, pick "course questions" without losing the first one's progress.
+- If the message does not match any label, the most recently active conversation for that user is used; if none was ever chosen, `APOYO EMOCIONAL` is assumed.
+- `DUDAS SOBRE EL CURSO` and `DUDAS SOBRE EL CONTENIDO` reply once with a fixed "not available yet" message and then stop responding entirely, until the user explicitly sends one of the 3 labels again.
 
 ### Using `whatsapp_id` Outside WhatsApp
 
@@ -152,17 +190,19 @@ whatsapp_id = "web:" + UUID_GENERATED_ONCE
 
 ### 2. Initialize the Conversation
 
-For a session that does not exist yet, the first request creates the session and returns the welcome message. The current backend does not process the content of this first request as a conversational answer.
+The first message of a new conversation should be one of the 3 bot labels (see [The 3 bots and how one gets selected](#the-3-bots-and-how-one-gets-selected)). The backend creates the corresponding session and does not process that first message as a conversational answer; it only decides which bot handles the conversation.
 
-A new application should therefore initialize the chat explicitly:
+A new application should therefore initialize the chat explicitly with a valid label:
 
 ```json
 {
   "whatsapp_id": "web:user-8f1a2c",
   "contact_name": "Maria",
-  "message": "Hello"
+  "message": "APOYO EMOCIONAL"
 }
 ```
+
+If any other text (e.g. "Hello") is sent as the first message, the backend treats it the same as not having chosen a bot and defaults to `APOYO EMOCIONAL` — but new apps get more predictable behavior by sending the label explicitly.
 
 The application displays the welcome `reply`. Messages from the next request onward are processed as part of the conversation.
 
