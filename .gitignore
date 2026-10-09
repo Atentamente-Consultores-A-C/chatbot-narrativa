@@ -29,3 +29,7 @@ service_account.json
 # Secrets
 .env
 bot/.env
+# Llaves SSH
+*.pem
+*.ps1
+*.sh

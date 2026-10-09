@@ -7,22 +7,42 @@
 create extension if not exists vector;
 
 -- ============================================================
--- 2. TABLA DE SESIONES
--- Una fila por número de WhatsApp
+-- 2. TABLA DE CONTACTOS
+-- Una fila por número de WhatsApp. Guarda qué bot está activo
+-- (active_bot_type) y datos libres del usuario compartidos entre
+-- los 3 bots (context: nombre de curso, etc. — sin esquema fijo).
 -- ============================================================
-create table sessions (
-  id uuid primary key default gen_random_uuid(),
-  whatsapp_id text unique not null,
+create table contacts (
+  whatsapp_id text primary key,
   contact_name text,
-  phase integer not null default 1,
-  research_consent boolean,
-  collected_data jsonb not null default '{}',
+  active_bot_type text check (active_bot_type in ('apoyo_emocional', 'dudas_curso', 'dudas_contenido')),
+  context jsonb not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 -- ============================================================
--- 3. TABLA DE MENSAJES
+-- 3. TABLA DE SESIONES
+-- Una fila por combinación (whatsapp_id, bot_type): cada uno de los
+-- 3 bots mantiene su propia conversación independiente para el
+-- mismo usuario.
+-- ============================================================
+create table sessions (
+  id uuid primary key default gen_random_uuid(),
+  whatsapp_id text not null,
+  bot_type text not null default 'apoyo_emocional'
+    check (bot_type in ('apoyo_emocional', 'dudas_curso', 'dudas_contenido')),
+  contact_name text,
+  phase integer not null default 1,
+  research_consent boolean,
+  collected_data jsonb not null default '{}',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (whatsapp_id, bot_type)
+);
+
+-- ============================================================
+-- 4. TABLA DE MENSAJES
 -- Historial completo de cada conversación
 -- ============================================================
 create table messages (
@@ -38,7 +58,7 @@ create index idx_messages_session_id on messages(session_id);
 create index idx_messages_created_at on messages(created_at);
 
 -- ============================================================
--- 4. TABLA DE LECCIONES APRENDIDAS
+-- 5. TABLA DE LECCIONES APRENDIDAS
 -- El agente supervisor las genera; el agente principal las lee
 -- ============================================================
 create table lessons (
@@ -53,7 +73,7 @@ create table lessons (
 );
 
 -- ============================================================
--- 5. TABLA DE EVALUACIONES DEL SUPERVISOR
+-- 6. TABLA DE EVALUACIONES DEL SUPERVISOR
 -- Una evaluación por cada respuesta del agente principal
 -- ============================================================
 create table evaluations (
@@ -67,7 +87,7 @@ create table evaluations (
 );
 
 -- ============================================================
--- 6. TABLA DE DOCUMENTOS (Vector Store para RAG)
+-- 7. TABLA DE DOCUMENTOS (Vector Store para RAG)
 -- Aquí van los PDFs de los cursos de AtentaMente
 -- ============================================================
 create table documents (
@@ -81,7 +101,7 @@ create table documents (
 create index idx_documents_metadata on documents using gin(metadata);
 
 -- ============================================================
--- 7. TRIGGER: actualiza updated_at en sessions automáticamente
+-- 8. TRIGGER: actualiza updated_at en sessions y contacts automáticamente
 -- ============================================================
 create or replace function update_updated_at()
 returns trigger language plpgsql as $$
@@ -95,8 +115,12 @@ create trigger sessions_updated_at
   before update on sessions
   for each row execute function update_updated_at();
 
+create trigger contacts_updated_at
+  before update on contacts
+  for each row execute function update_updated_at();
+
 -- ============================================================
--- 8. FUNCIÓN RPC: búsqueda semántica en documentos
+-- 9. FUNCIÓN RPC: búsqueda semántica en documentos
 -- La llama el agente principal para RAG
 -- ============================================================
 create or replace function match_documents(
@@ -129,7 +153,7 @@ end;
 $$;
 
 -- ============================================================
--- 9. FUNCIÓN RPC: búsqueda semántica en lecciones aprendidas
+-- 10. FUNCIÓN RPC: búsqueda semántica en lecciones aprendidas
 -- La llama el agente principal para inyectar lecciones relevantes
 -- ============================================================
 create or replace function match_lessons(

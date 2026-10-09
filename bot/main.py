@@ -1,4 +1,4 @@
-"""
+﻿"""
 FastAPI webhook para Turn.io.
 
 Turn.io envia:
@@ -29,9 +29,12 @@ from bot.prompts.phases import get_welcome_message
 from bot.agents.supervisor import evaluate_response
 from bot.bot_router import detect_bot_type, APOYO_EMOCIONAL
 
+<<<<<<< HEAD
 VALID_REASONS = {"offensive", "harmful", "incorrect", "privacy", "other"}
 
-# Lock por usuario — evita procesar dos mensajes simultáneos del mismo número
+=======
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
+# Lock por usuario â€” evita procesar dos mensajes simultÃ¡neos del mismo nÃºmero
 _user_locks: dict[str, asyncio.Lock] = {}
 
 def _get_user_lock(whatsapp_id: str) -> asyncio.Lock:
@@ -104,17 +107,32 @@ async def webhook(request: Request):
     try:
         body = await request.json()
     except Exception:
+<<<<<<< HEAD
         raw_str = raw.decode("utf-8", errors="replace")
         print(f"[Warning] JSON invalido, intentando extraccion por regex: {raw_str[:300]}")
         wid = re.search(r'"whatsapp_id"\s*:\s*"([^"]+)"', raw_str)
         name = re.search(r'"contact_name"\s*:\s*"([^"]*)"', raw_str)
+=======
+        # JSON invÃ¡lido â€” el mensaje probablemente contiene comillas dobles u otros
+        # caracteres especiales que Turn.io no escapÃ³ al construir el body.
+        # Intentamos extraer los campos con regex para no perder el mensaje.
+        raw_str = raw.decode("utf-8", errors="replace")
+        print(f"[Warning] JSON invÃ¡lido, intentando extracciÃ³n por regex: {raw_str[:300]}")
+        wid = re.search(r'"whatsapp_id"\s*:\s*"([^"]+)"', raw_str)
+        name = re.search(r'"contact_name"\s*:\s*"([^"]*)"', raw_str)
+        # Intentamos dos formatos: message antes o despuÃ©s de whatsapp_id
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
         msg_match = re.search(
             r'"message"\s*:\s*"(.*?)",\s*"whatsapp_id"', raw_str, re.DOTALL
         ) or re.search(
             r'"message"\s*:\s*"(.*?)"\s*\}', raw_str, re.DOTALL
         )
         if not wid:
+<<<<<<< HEAD
             return JSONResponse({"reply": "Lo siento, hubo un error procesando tu mensaje. Puedes intentarlo de nuevo?"})
+=======
+            return JSONResponse({"reply": "Lo siento, hubo un error procesando tu mensaje. Â¿Puedes intentarlo de nuevo?"})
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
         body = {
             "whatsapp_id": wid.group(1),
             "contact_name": name.group(1) if name else "",
@@ -133,24 +151,30 @@ async def webhook(request: Request):
     async with _get_user_lock(whatsapp_id):
         reply = await handle_message(whatsapp_id, contact_name, user_message, context)
 
+<<<<<<< HEAD
+=======
+    # None o "" = no hay respuesta que mostrar.
+    # Devolver {} sin clave "reply" â€” Turn.io no renderiza nada si el campo estÃ¡ ausente
+    # (si se devuelve {"reply": ""} Turn.io puede mostrar "@api_response.body.reply" literal).
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
     if not reply:
         return JSONResponse({})
     return JSONResponse({"reply": reply})
 
 
 # ---------------------------------------------------------------------------
-# Detección de mensajes especiales
+# DetecciÃ³n de mensajes especiales
 # ---------------------------------------------------------------------------
 
 _GREETINGS = {
-    "hola", "buenas", "buenos días", "buenos dias", "buenas tardes", "buenas noches",
-    "hey", "hi", "hello", "qué tal", "que tal", "saludos", "buen día", "buen dia",
+    "hola", "buenas", "buenos dÃ­as", "buenos dias", "buenas tardes", "buenas noches",
+    "hey", "hi", "hello", "quÃ© tal", "que tal", "saludos", "buen dÃ­a", "buen dia",
 }
 
 _FAREWELLS = {
-    "adiós", "adios", "hasta luego", "hasta pronto", "nos vemos", "bye", "chao", "chau",
+    "adiÃ³s", "adios", "hasta luego", "hasta pronto", "nos vemos", "bye", "chao", "chau",
     "ok gracias", "ok, gracias", "gracias", "muchas gracias", "de nada", "entendido",
-    "perfecto gracias", "listo gracias", "hasta la próxima", "hasta la proxima",
+    "perfecto gracias", "listo gracias", "hasta la prÃ³xima", "hasta la proxima",
     "no gracias", "no, gracias", "ya gracias", "ya, gracias",
     "salir",
 }
@@ -158,11 +182,11 @@ _FAREWELLS = {
 _UNRESOLVED_TEMPLATE = re.compile(r"@event\.|@contact\.|{{.*?}}|Starting preview\.\.\.")
 
 def _is_greeting(text: str) -> bool:
-    normalized = text.lower().strip("!¡?¿., ")
+    normalized = text.lower().strip("!Â¡?Â¿., ")
     return any(normalized.startswith(g) for g in _GREETINGS)
 
 def _is_farewell(text: str) -> bool:
-    normalized = text.lower().strip("!¡?¿., ")
+    normalized = text.lower().strip("!Â¡?Â¿., ")
     return normalized in _FAREWELLS or any(normalized.startswith(f) for f in _FAREWELLS)
 
 def _is_invalid_template(text: str) -> bool:
@@ -176,7 +200,7 @@ def _parse_debug_command(text: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# Lógica central
+# LÃ³gica central
 # ---------------------------------------------------------------------------
 
 async def handle_message(
@@ -193,6 +217,12 @@ async def handle_message(
     if context:
         await asyncio.to_thread(merge_contact_context, whatsapp_id, contact, context)
 
+<<<<<<< HEAD
+=======
+    # El usuario elige el bot enviando la etiqueta exacta (vÃ­a menÃº de Turn.io).
+    # Si no elige ninguna, se queda con el bot activo previamente o, a falta de
+    # uno, con apoyo emocional por default.
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
     matched_bot_type = detect_bot_type(user_message)
     active_bot_type = matched_bot_type or contact.get("active_bot_type") or APOYO_EMOCIONAL
     if contact.get("active_bot_type") != active_bot_type:
@@ -202,6 +232,12 @@ async def handle_message(
     session_id = session["id"]
     phase = session["phase"]
 
+<<<<<<< HEAD
+=======
+    # Bots todavÃ­a no implementados: una sola respuesta fija y la conversaciÃ³n
+    # queda cerrada â€” no se procesa ni se responde nada mÃ¡s hasta que el usuario
+    # vuelva a elegir explÃ­citamente uno de los 3 bots.
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
     if active_bot_type != APOYO_EMOCIONAL:
         if not matched_bot_type:
             return None
@@ -210,16 +246,28 @@ async def handle_message(
         await asyncio.to_thread(update_session, session_id, {"phase": 6})
         return UNAVAILABLE_MESSAGE
 
+<<<<<<< HEAD
+=======
+    # Comandos de debug â€” no se guardan en historial
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
     debug_cmd = _parse_debug_command(user_message)
     if debug_cmd is not None:
         if debug_cmd == "reset":
             await asyncio.to_thread(update_session, session_id, {"phase": 1, "collected_data": {}})
             await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, 1)
+<<<<<<< HEAD
             print(f"[Debug] Sesion reseteada para {whatsapp_id}")
             return WELCOME_MESSAGE
         elif debug_cmd == "end":
             await asyncio.to_thread(update_session, session_id, {"phase": 6, "collected_data": {}})
             print(f"[Debug] Conversacion terminada para {whatsapp_id}")
+=======
+            print(f"[Debug] SesiÃ³n reseteada para {whatsapp_id}")
+            return WELCOME_MESSAGE
+        elif debug_cmd == "end":
+            await asyncio.to_thread(update_session, session_id, {"phase": 6, "collected_data": {}})
+            print(f"[Debug] ConversaciÃ³n terminada para {whatsapp_id}")
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
             return None
         elif debug_cmd == "clear":
             await asyncio.to_thread(delete_messages, session_id)
@@ -230,11 +278,21 @@ async def handle_message(
         else:
             return f"[Debug] Comando desconocido: {debug_cmd!r}. Comandos disponibles: reset, end, clear"
 
+<<<<<<< HEAD
     if phase <= 5 and _is_farewell(user_message):
         await asyncio.to_thread(update_session, session_id, {"phase": 6})
         print(f"[Info] Despedida detectada, sesion cerrada para {whatsapp_id}")
-        return "Cuídate mucho. Aquí estaré cuando me necesites. 🙏"
+        return "CuÃ­date mucho. AquÃ­ estarÃ© cuando me necesites. ðŸ™"
 
+=======
+    # Despedidas durante la conversaciÃ³n activa
+    if phase <= 5 and _is_farewell(user_message):
+        await asyncio.to_thread(update_session, session_id, {"phase": 6})
+        print(f"[Info] Despedida detectada, sesiÃ³n cerrada para {whatsapp_id}")
+        return "CuÃ­date mucho. AquÃ­ estarÃ© cuando me necesites. ðŸ™"
+
+    # ConversaciÃ³n terminada â€” solo reactivar si el usuario saluda
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
     if phase > 5:
         if _is_greeting(user_message):
             await asyncio.to_thread(update_session, session_id, {"phase": 1, "collected_data": {}})
@@ -245,10 +303,14 @@ async def handle_message(
             await asyncio.to_thread(save_message, session_id, "assistant", welcome, 1)
             return welcome
         else:
-            return "Esta conversación ya terminó. Si quieres iniciar una nueva, escríbeme 'Hola'."
+            return "Esta conversaciÃ³n ya terminÃ³. Si quieres iniciar una nueva, escrÃ­beme 'Hola'."
 
     history = await asyncio.to_thread(get_history, session_id)
 
+<<<<<<< HEAD
+=======
+    # Primer contacto vÃ­a CLI
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
     if user_message == "__init__":
         if not history:
             await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, phase)
@@ -256,6 +318,7 @@ async def handle_message(
         first_bot = next((m["content"] for m in history if m["role"] == "assistant"), WELCOME_MESSAGE)
         return first_bot
 
+<<<<<<< HEAD
     if not history:
         await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, phase)
         return WELCOME_MESSAGE
@@ -266,9 +329,26 @@ async def handle_message(
         result = await process_message(session, history, user_message)
     except Exception as e:
         print(f"[Error] process_message fallo para {whatsapp_id}: {e}")
+=======
+    # Primera vez que el usuario escribe (sin historial previo): mostrar bienvenida.
+    # El trigger de Turn.io puede ser cualquier mensaje; la bienvenida ya tiene la
+    # pregunta de apertura, asÃ­ que el usuario responderÃ¡ a ella naturalmente.
+    if not history:
+        await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, phase)
+        return WELCOME_MESSAGE
+
+    # Guardar mensaje del usuario
+    await asyncio.to_thread(save_message, session_id, "user", user_message, phase)
+
+    # Procesar con el agente principal
+    try:
+        result = await process_message(session, history, user_message)
+    except Exception as e:
+        print(f"[Error] process_message fallÃ³ para {whatsapp_id}: {e}")
+>>>>>>> ea1d63d4e7feaf414d6d9bffae53d28c4602a501
         return (
-            "Tuve un problema técnico procesando tu mensaje. "
-            "¿Puedes intentar enviarlo de nuevo?"
+            "Tuve un problema tÃ©cnico procesando tu mensaje. "
+            "Â¿Puedes intentar enviarlo de nuevo?"
         )
 
     reply = result["reply"]

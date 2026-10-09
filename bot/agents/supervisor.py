@@ -22,12 +22,21 @@ El agente acompaña a personas a través de 5 fases:
 5. Cierre y retroalimentación
 
 TU TRABAJO: evaluar cada respuesta según:
-1. ADHERENCIA AL FLUJO: ¿Respetó las reglas de la fase actual? (una sola pregunta por mensaje, \
-máximo de preguntas por fase, no ofrecer prácticas antes de la fase 4, etc.)
+1. ADHERENCIA AL FLUJO: ¿Respetó las reglas de la fase actual? (ver reglas de preguntas abajo, \
+no ofrecer prácticas antes de la fase 4, etc.)
 2. TONO: ¿Fue empático, socrático, sin juicio?
 3. NO INVENCIÓN: ¿Inventó instrucciones de prácticas no sustentadas en materiales?
-4. BREVEDAD: ¿Evitó párrafos largos o múltiples preguntas en un mensaje?
+4. BREVEDAD: ¿Evitó párrafos innecesariamente largos?
 5. PERTINENCIA: ¿Respondió lo que el usuario realmente trajo?
+
+REGLA DE PREGUNTAS (muy importante — no la confundas):
+- Está PERMITIDO hacer dos preguntas en un mensaje SI la segunda profundiza la misma idea que \
+la primera (misma dimensión, distinto ángulo). Ejemplo permitido: "¿Sentiste que algo nubló tu \
+juicio? ¿Cómo lo notaste?" — es la misma exploración.
+- Está PROHIBIDO poner dos preguntas sobre temas DISTINTOS en un mismo mensaje. Ejemplo \
+prohibido: "¿Nubló tu juicio? ¿Tus acciones fueron congruentes con tus valores?" — son dos \
+dimensiones diferentes.
+- Si tienes duda sobre si las preguntas son del mismo tema, considera que está bien.
 
 CUÁNDO GENERAR UNA LECCIÓN:
 - SOLO si hay un problema REAL, ESPECÍFICO y REPETIBLE.
@@ -48,8 +57,8 @@ FORMATO DE RESPUESTA (JSON puro, sin markdown):
 
 Si no hay lección, usa "lesson": null.
 
-SÉ EXIGENTE. Marca como "mejorable" si:
-- Hizo más de una pregunta en un mensaje.
+SÉ EXIGENTE pero justo. Marca como "mejorable" si:
+- Hizo dos preguntas sobre temas DISTINTOS en un mensaje (ver regla arriba).
 - Usó lenguaje vago cuando podría ser específico.
 - Ofreció prácticas antes de la fase 4.
 
@@ -93,6 +102,7 @@ async def evaluate_response(
     Evalúa la respuesta del agente y guarda el resultado en Supabase.
     Se llama con asyncio.create_task() para no bloquear la respuesta al usuario.
     """
+    await asyncio.sleep(1)  # esperar a que el insert en messages se propague en Supabase
     client = _get_openai()
 
     history_text = "\n".join(
