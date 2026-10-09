@@ -12,6 +12,7 @@ import asyncio
 import os
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, field_validator
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
@@ -20,8 +21,11 @@ load_dotenv()
 from bot.rag.style_context import get_style_context
 from bot.db.sessions import get_or_create_session, update_session, advance_phase, update_collected_data
 from bot.db.messages import save_message, get_history
+from bot.db.reports import save_report
 from bot.agents.main_agent import process_message, WELCOME_MESSAGE
 from bot.agents.supervisor import evaluate_response
+
+VALID_REASONS = {"offensive", "harmful", "incorrect", "privacy", "other"}
 
 @asynccontextmanager
 async def lifespan(app):
@@ -33,9 +37,47 @@ async def lifespan(app):
 app = FastAPI(title="AtentaMente Bot", lifespan=lifespan)
 
 
+class ReportRequest(BaseModel):
+    reply_text: str
+    sent_at: str        # ISO 8601, ej: "2026-10-09T14:30:00Z"
+    reason: str         # "offensive" | "harmful" | "incorrect" | "privacy" | "other"
+    comment: str | None = None
+    whatsapp_id: str | None = None   # opcional, para trazabilidad
+
+    @field_validator("reason")
+    @classmethod
+    def reason_must_be_valid(cls, v: str) -> str:
+        if v not in VALID_REASONS:
+            raise ValueError(f"reason debe ser uno de: {sorted(VALID_REASONS)}")
+        return v
+
+    @field_validator("reply_text", "sent_at")
+    @classmethod
+    def must_not_be_empty(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("El campo no puede estar vacío")
+        return v
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.post("/chat/reports", status_code=201)
+async def create_report(body: ReportRequest):
+    """
+    Recibe un reporte de respuesta ofensiva/incorrecta generada por la IA.
+    Requerido por Google Play para apps con contenido generado por IA.
+    """
+    row = save_report(
+        reply_text=body.reply_text,
+        sent_at=body.sent_at,
+        reason=body.reason,
+        comment=body.comment,
+        whatsapp_id=body.whatsapp_id,
+    )
+    return {"id": row["id"], "status": "received"}
 
 
 @app.post("/webhook")
