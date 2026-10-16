@@ -6,7 +6,7 @@ de botones que Turn.io presenta antes de llamar a nuestro webhook):
 
   APOYO EMOCIONAL          -> flujo completo de acompañamiento (bot/agents/main_agent.py)
   DUDAS SOBRE EL CURSO     -> todavía no implementado (bot/agents/stub_agent.py)
-  DUDAS SOBRE EL CONTENIDO -> todavía no implementado (bot/agents/stub_agent.py)
+  DUDAS SOBRE EL CONTENIDO -> RAG sobre materiales de cursos (bot/agents/content_agent.py)
 """
 import unicodedata
 
@@ -14,7 +14,7 @@ APOYO_EMOCIONAL = "apoyo_emocional"
 DUDAS_CURSO = "dudas_curso"
 DUDAS_CONTENIDO = "dudas_contenido"
 
-STUB_BOT_TYPES = {DUDAS_CURSO, DUDAS_CONTENIDO}
+STUB_BOT_TYPES = {DUDAS_CURSO}
 
 _LABELS = {
     APOYO_EMOCIONAL: "APOYO EMOCIONAL",

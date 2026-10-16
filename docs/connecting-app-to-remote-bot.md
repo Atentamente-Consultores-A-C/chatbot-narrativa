@@ -85,7 +85,9 @@ Rules:
 - It is optional; if it is omitted or is not a JSON object, it is ignored.
 - Keys sent are shallow-merged with whatever was already stored — there is no need to resend every key on every turn, only the ones that changed.
 - It is shared across all 3 bots (emotional support, course questions, content questions) because it describes the user, not one specific conversation.
-- There is no fixed list of expected keys yet; each bot will read whichever ones it needs as it gets built out.
+- Keys the backend already uses:
+  - `course_name` (string): the person's course. `DUDAS SOBRE EL CONTENIDO` uses it to search only that course's material. It must match (ignoring case and accents) a course that has content loaded, e.g. `Educar para el Bienestar` or `PIBSE Educadores`. If it is missing or does not match, the bot asks the user which course they mean once; if that is not recognized either, it answers using all the material available across every course.
+- Any other key is stored and shown to the model as information about the person, but there is no fixed list yet: each bot will read whichever ones it needs as it gets built out.
 
 ### The 3 bots and how one gets selected
 
@@ -93,13 +95,14 @@ The bot is no longer a single flow: the first message of every conversation must
 
 - `APOYO EMOCIONAL` — the existing emotional-support flow (5 phases).
 - `DUDAS SOBRE EL CURSO` — not implemented yet.
-- `DUDAS SOBRE EL CONTENIDO` — not implemented yet.
+- `DUDAS SOBRE EL CONTENIDO` — explains course concepts and practices using only the loaded material, and cites the course and module it comes from. It is a multi-turn conversation, closed by a farewell (`salir`, `gracias`, etc.).
 
 Behavior:
 
 - If the message matches one of the 3 labels, that becomes the active conversation for that `whatsapp_id`. Each of the 3 keeps its own history and state, independent of the others — the same user can have an ongoing emotional-support conversation and, at a later point, pick "course questions" without losing the first one's progress.
 - If the message does not match any label, the most recently active conversation for that user is used; if none was ever chosen, `APOYO EMOCIONAL` is assumed.
-- `DUDAS SOBRE EL CURSO` and `DUDAS SOBRE EL CONTENIDO` reply once with a fixed "not available yet" message and then stop responding entirely, until the user explicitly sends one of the 3 labels again.
+- If the user sends the label of a bot whose conversation is still open, the bot resumes by resending its last message; if the conversation was already closed, a new one starts with its welcome message.
+- `DUDAS SOBRE EL CURSO` replies once with a fixed "not available yet" message and then stops responding entirely, until the user explicitly sends one of the 3 labels again.
 
 ### Using `whatsapp_id` Outside WhatsApp
 

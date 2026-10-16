@@ -12,6 +12,38 @@ def _get_openai() -> OpenAI:
     return _openai
 
 
+_courses_cache: list[str] | None = None
+
+
+def get_known_courses() -> list[str]:
+    """Nombres de curso con contenido ingestado (sin 'ALL'). Se cachea en memoria."""
+    global _courses_cache
+    if _courses_cache is None:
+        sb = get_supabase()
+        courses: set[str] = set()
+        page_size, start = 1000, 0
+        while True:
+            rows = (
+                sb.table("documents")
+                .select("metadata->>course")
+                .filter("metadata->>doc_type", "eq", "knowledge")
+                .order("id")
+                .range(start, start + page_size - 1)
+                .execute()
+                .data
+                or []
+            )
+            for row in rows:
+                name = (row.get("course") or "").strip()
+                if name and name != "ALL":
+                    courses.add(name)
+            if len(rows) < page_size:
+                break
+            start += page_size
+        _courses_cache = sorted(courses)
+    return _courses_cache
+
+
 def _embed(text: str) -> list[float]:
     response = _get_openai().embeddings.create(
         model="text-embedding-3-small",

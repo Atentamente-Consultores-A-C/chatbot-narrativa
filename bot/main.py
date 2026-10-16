@@ -23,9 +23,12 @@ from bot.db.sessions import get_or_create_session, update_session
 from bot.db.messages import save_message, get_history, delete_messages
 from bot.agents.main_agent import process_message, WELCOME_MESSAGE
 from bot.agents.stub_agent import UNAVAILABLE_MESSAGE
+from bot.agents.content_agent import process_message as process_content_message
 from bot.prompts.phases import get_welcome_message
+from bot.prompts.content import CONTENT_WELCOME_MESSAGE, get_content_welcome_message
 from bot.agents.supervisor import evaluate_response
-from bot.bot_router import detect_bot_type, APOYO_EMOCIONAL
+from bot.rag.retriever import get_known_courses
+from bot.bot_router import detect_bot_type, APOYO_EMOCIONAL, DUDAS_CONTENIDO, STUB_BOT_TYPES
 
 # Lock por usuario — evita procesar dos mensajes simultáneos del mismo número
 _user_locks: dict[str, asyncio.Lock] = {}
@@ -40,6 +43,8 @@ def _get_user_lock(whatsapp_id: str) -> asyncio.Lock:
 async def lifespan(app):
     style = await asyncio.to_thread(get_style_context)
     print(f"[Startup] Style context cargado ({len(style)} chars).")
+    courses = await asyncio.to_thread(get_known_courses)
+    print(f"[Startup] Cursos con contenido: {courses}")
     yield
 
 app = FastAPI(title="AtentaMente Bot", lifespan=lifespan)
@@ -128,6 +133,16 @@ def _is_farewell(text: str) -> bool:
 def _is_invalid_template(text: str) -> bool:
     return bool(_UNRESOLVED_TEMPLATE.search(text))
 
+def _first_welcome(bot_type: str) -> str:
+    return CONTENT_WELCOME_MESSAGE if bot_type == DUDAS_CONTENIDO else WELCOME_MESSAGE
+
+
+def _returning_welcome(bot_type: str, contact_name: str | None) -> str:
+    if bot_type == DUDAS_CONTENIDO:
+        return get_content_welcome_message(contact_name)
+    return get_welcome_message(contact_name)
+
+
 def _parse_debug_command(text: str) -> str | None:
     normalized = text.lower().strip()
     if normalized.startswith("debugg:"):
@@ -150,8 +165,9 @@ async def handle_message(
         return None
 
     contact = await asyncio.to_thread(get_or_create_contact, whatsapp_id, contact_name)
+    user_context = contact.get("context") or {}
     if context:
-        await asyncio.to_thread(merge_contact_context, whatsapp_id, contact, context)
+        user_context = await asyncio.to_thread(merge_contact_context, whatsapp_id, contact, context)
 
     # El usuario elige el bot enviando la etiqueta exacta (vía menú de Turn.io).
     # Si no elige ninguna, se queda con el bot activo previamente o, a falta de
@@ -168,7 +184,7 @@ async def handle_message(
     # Bots todavía no implementados: una sola respuesta fija y la conversación
     # queda cerrada — no se procesa ni se responde nada más hasta que el usuario
     # vuelva a elegir explícitamente uno de los 3 bots.
-    if active_bot_type != APOYO_EMOCIONAL:
+    if active_bot_type in STUB_BOT_TYPES:
         if not matched_bot_type:
             return None
         await asyncio.to_thread(save_message, session_id, "user", user_message, phase)
@@ -181,9 +197,10 @@ async def handle_message(
     if debug_cmd is not None:
         if debug_cmd == "reset":
             await asyncio.to_thread(update_session, session_id, {"phase": 1, "collected_data": {}})
-            await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, 1)
+            welcome = _first_welcome(active_bot_type)
+            await asyncio.to_thread(save_message, session_id, "assistant", welcome, 1)
             print(f"[Debug] Sesión reseteada para {whatsapp_id}")
-            return WELCOME_MESSAGE
+            return welcome
         elif debug_cmd == "end":
             await asyncio.to_thread(update_session, session_id, {"phase": 6, "collected_data": {}})
             print(f"[Debug] Conversación terminada para {whatsapp_id}")
@@ -191,9 +208,10 @@ async def handle_message(
         elif debug_cmd == "clear":
             await asyncio.to_thread(delete_messages, session_id)
             await asyncio.to_thread(update_session, session_id, {"phase": 1, "collected_data": {}})
-            await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, 1)
+            welcome = _first_welcome(active_bot_type)
+            await asyncio.to_thread(save_message, session_id, "assistant", welcome, 1)
             print(f"[Debug] Historial borrado para {whatsapp_id}")
-            return WELCOME_MESSAGE
+            return welcome
         else:
             return f"[Debug] Comando desconocido: {debug_cmd!r}. Comandos disponibles: reset, end, clear"
 
@@ -203,14 +221,14 @@ async def handle_message(
         print(f"[Info] Despedida detectada, sesión cerrada para {whatsapp_id}")
         return "Cuídate mucho. Aquí estaré cuando me necesites. 🙏"
 
-    # Conversación terminada — solo reactivar si el usuario saluda
+    # Conversación terminada — solo reactivar si el usuario saluda o vuelve a elegir el bot
     if phase > 5:
-        if _is_greeting(user_message):
+        if _is_greeting(user_message) or matched_bot_type:
             await asyncio.to_thread(update_session, session_id, {"phase": 1, "collected_data": {}})
             session["phase"] = 1
             session["collected_data"] = {}
             phase = 1
-            welcome = get_welcome_message(session.get("contact_name"))
+            welcome = _returning_welcome(active_bot_type, session.get("contact_name"))
             await asyncio.to_thread(save_message, session_id, "assistant", welcome, 1)
             return welcome
         else:
@@ -218,23 +236,60 @@ async def handle_message(
 
     history = await asyncio.to_thread(get_history, session_id)
 
+    # La etiqueta es solo la elección del bot, nunca un mensaje del usuario.
+    # - Si lo último que se mandó fue la bienvenida (ej. la app saluda y luego envía la
+    #   etiqueta), ya se mostró: no se repite.
+    # - Si había una conversación en curso, se retoma con el último mensaje del bot.
+    if matched_bot_type and history:
+        welcomes = {
+            _first_welcome(active_bot_type),
+            _returning_welcome(active_bot_type, session.get("contact_name")),
+        }
+        if history[-1]["role"] == "assistant" and history[-1]["content"] in welcomes:
+            return None
+        last_bot = next((m["content"] for m in reversed(history) if m["role"] == "assistant"), None)
+        if last_bot:
+            return last_bot
+
+    welcome_first = _first_welcome(active_bot_type)
+
     # Primer contacto vía CLI
     if user_message == "__init__":
         if not history:
-            await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, phase)
-            return WELCOME_MESSAGE
-        first_bot = next((m["content"] for m in history if m["role"] == "assistant"), WELCOME_MESSAGE)
+            await asyncio.to_thread(save_message, session_id, "assistant", welcome_first, phase)
+            return welcome_first
+        first_bot = next((m["content"] for m in history if m["role"] == "assistant"), welcome_first)
         return first_bot
 
     # Primera vez que el usuario escribe (sin historial previo): mostrar bienvenida.
     # El trigger de Turn.io puede ser cualquier mensaje; la bienvenida ya tiene la
     # pregunta de apertura, así que el usuario responderá a ella naturalmente.
     if not history:
-        await asyncio.to_thread(save_message, session_id, "assistant", WELCOME_MESSAGE, phase)
-        return WELCOME_MESSAGE
+        await asyncio.to_thread(save_message, session_id, "assistant", welcome_first, phase)
+        return welcome_first
 
     # Guardar mensaje del usuario
     await asyncio.to_thread(save_message, session_id, "user", user_message, phase)
+
+    if active_bot_type == DUDAS_CONTENIDO:
+        content_ctx = {"nombre": session.get("contact_name"), **user_context}
+        try:
+            content_result = await process_content_message(session, history, user_message, content_ctx)
+        except Exception as e:
+            print(f"[Error] content_agent falló para {whatsapp_id}: {e}")
+            return (
+                "Tuve un problema técnico procesando tu mensaje. "
+                "¿Puedes intentar enviarlo de nuevo?"
+            )
+        if content_result["course"] or content_result["general"]:
+            collected = {**session.get("collected_data", {})}
+            if content_result["course"]:
+                collected["course"] = content_result["course"]
+            if content_result["general"]:
+                collected["course_general"] = True
+            await asyncio.to_thread(update_session, session_id, {"collected_data": collected})
+        await asyncio.to_thread(save_message, session_id, "assistant", content_result["reply"], phase)
+        return content_result["reply"]
 
     # Procesar con el agente principal
     try:

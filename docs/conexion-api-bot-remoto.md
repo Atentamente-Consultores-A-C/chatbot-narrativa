@@ -85,7 +85,9 @@ Reglas:
 - Es opcional; si no se envía o no es un objeto JSON, se ignora.
 - Las claves que se manden se mezclan (merge superficial) con lo que ya se tenía guardado — no hace falta reenviar todas las claves en cada turno, solo las que cambiaron.
 - Es compartido entre los 3 bots (apoyo emocional, dudas sobre el curso, dudas sobre el contenido) porque describe al usuario, no a una conversación en particular.
-- Todavía no hay una lista fija de claves esperadas: cada bot leerá las que necesite a medida que se implemente.
+- Claves que el backend ya usa:
+  - `course_name` (string): nombre del curso de la persona. Lo usa `DUDAS SOBRE EL CONTENIDO` para buscar solo en el material de ese curso. Debe coincidir (sin distinguir mayúsculas ni acentos) con un curso que tenga contenido cargado, por ejemplo `Educar para el Bienestar` o `PIBSE Educadores`. Si falta o no coincide, el bot le pregunta el curso al usuario una vez; si tampoco lo reconoce, responde la duda con todo el material disponible de todos los cursos.
+- Cualquier otra clave se guarda y se muestra al modelo como dato de la persona, pero todavía no hay una lista fija: cada bot leerá las que necesite a medida que se implemente.
 
 ### Los 3 bots y cómo se elige uno
 
@@ -93,13 +95,14 @@ El bot ya no es uno solo: el primer mensaje de cada conversación debe ser exact
 
 - `APOYO EMOCIONAL` — el flujo de acompañamiento de siempre (5 fases).
 - `DUDAS SOBRE EL CURSO` — todavía no implementado.
-- `DUDAS SOBRE EL CONTENIDO` — todavía no implementado.
+- `DUDAS SOBRE EL CONTENIDO` — explica conceptos y prácticas de los cursos usando únicamente el material cargado, y cita el curso y módulo de donde viene. Es una conversación de varios turnos; se cierra con una despedida (`salir`, `gracias`, etc.).
 
 Comportamiento:
 
 - Si el mensaje coincide con una de las 3 etiquetas, esa pasa a ser la conversación activa para ese `whatsapp_id`. Cada una de las 3 mantiene su propio historial y estado, independiente de las otras — un mismo usuario puede tener una conversación de apoyo emocional en curso y, en otro momento, elegir "dudas sobre el curso" sin perder el progreso de la primera.
 - Si el mensaje no coincide con ninguna etiqueta, se usa la conversación activa más reciente para ese usuario; si nunca eligió ninguna, se asume `APOYO EMOCIONAL`.
-- `DUDAS SOBRE EL CURSO` y `DUDAS SOBRE EL CONTENIDO` responden una sola vez con un mensaje fijo de "no disponible todavía" y después ya no responden nada más, hasta que el usuario vuelva a mandar explícitamente una de las 3 etiquetas.
+- Si el usuario vuelve a mandar la etiqueta de un bot cuya conversación sigue abierta, el bot retoma enviando su último mensaje; si la conversación ya estaba cerrada, inicia una nueva con su bienvenida.
+- `DUDAS SOBRE EL CURSO` responde una sola vez con un mensaje fijo de "no disponible todavía" y después ya no responde nada más, hasta que el usuario vuelva a mandar explícitamente una de las 3 etiquetas.
 
 ### El campo `whatsapp_id` en aplicaciones que no usan WhatsApp
 
