@@ -59,13 +59,30 @@ conversación — todo lo que compartas se explica por escrito, en el propio men
 # ------------------------------------------------------------------------------
 # FASE 0: Bienvenida — texto fijo, no es prompt del sistema
 # ------------------------------------------------------------------------------
+SHORT_MODE_MAX_MINUTES = 10
+
+# Opciones cerradas con palabras propias (no sí/no) para no confundirse con la
+# respuesta a la otra pregunta de la bienvenida ("¿hay alguna situación...?").
+TIME_OPTION_SHORT = "poco"
+TIME_OPTION_LONG = "normal"
+TIME_QUESTION = (
+    f"¿Cuánto tiempo tienes ahora para conversar: {TIME_OPTION_SHORT} o {TIME_OPTION_LONG}?"
+)
+
+# Texto provisional: pendiente de validar con el equipo académico.
+DISCLAIMER = (
+    "Esto no es una línea de atención psicológica ni sustituye un acompañamiento terapéutico."
+)
+
 WELCOME_MESSAGE = (
     "Hola, bienvenido/a a este espacio de acompañamiento. "
     "Estoy aquí como espacio de acompañamiento para los programas de AMe y para ayudarte a "
     "encontrar herramientas concretas de los cursos de AMe que te puedan ayudar. "
+    f"{DISCLAIMER}\n\n"
     "¿Qué te trae hoy? ¿Hay alguna situación que te esté causando sufrimiento últimamente?\n\n"
     "Si quieres, también me puedes compartir tu nombre, edad, género y ocupación, "
     "pero es totalmente opcional.\n\n"
+    f"{TIME_QUESTION}\n\n"
     "Si deseas terminar escribe *salir*."
 )
 
@@ -75,8 +92,9 @@ def get_welcome_message(contact_name: str | None = None) -> str:
     if contact_name:
         return (
             f"Hola de nuevo, {contact_name}. Qué bueno que volviste. "
-            "Estoy aquí para acompañarte. "
-            "¿Qué te trae hoy? ¿Hay algo que te esté generando malestar últimamente?"
+            f"Estoy aquí para acompañarte. {DISCLAIMER}\n\n"
+            "¿Qué te trae hoy? ¿Hay algo que te esté generando malestar últimamente?\n\n"
+            f"{TIME_QUESTION}"
         )
     return WELCOME_MESSAGE
 
@@ -117,28 +135,21 @@ no como una lista de hechos reordenados.
   "A ver si entendí bien lo que me compartiste: [narrativa en 3-5 oraciones]. ¿Sientes que \
 refleja bien lo que viviste, o hay algo que cambiarías?"
 
-PASO 5 — Confirmación (máximo 3 rondas de corrección):
-  Cuenta las rondas contando cuántas veces, dentro de esta fase, el usuario ya pidió un \
-ajuste a la paráfrasis (revisa el historial de la conversación). No cuentes la primera \
-paráfrasis del PASO 4 como una ronda.
+PASO 5 — Confirmación (UNA sola ronda de ajuste):
+  Hay una sola paráfrasis y, como máximo, un ajuste del usuario. Después de ese ajuste \
+la fase termina.
 
   -> Si el usuario confirma con cualquier variante de "sí", "es buena", "correcto",
      "así es", "sí se parece", "exacto", "perfecto", "continúa", "continuemos",
      "adelante", "está bien", "de acuerdo", "ok": tu ÚNICO mensaje válido es
      [FIN_FASE]. Sin ninguna otra palabra antes ni después.
 
-  -> Si el usuario corrige algo (ronda 1 o 2 de corrección):
-     Identifica exactamente qué señaló como incorrecto, incompleto o mal interpretado. \
-Reescribe la paráfrasis COMPLETA integrando ese ajuste — no la conviertas en una lista de \
-cambios ni te limites a repetir el fragmento corregido; el resultado debe seguir siendo una \
-narrativa de 3-5 oraciones, coherente, que conserve las partes que el usuario no cuestionó. \
-Vuelve a usar el formato del PASO 4 para preguntar si ahora sí quedó bien.
-
-  -> Si es la 3ra ronda de corrección y el usuario TODAVÍA señala algo por ajustar:
-     No vuelvas a reescribir ni a preguntar. Reconoce el ajuste en UNA frase breve sin \
-repetir la paráfrasis (ej.: "Gracias por la precisión, lo tomo en cuenta.") y en el mismo \
-mensaje escribe [FIN_FASE]. La transición debe sentirse fluida, no como un corte: no digas \
-que se acabaron los intentos ni que hay un límite de correcciones.
+  -> Si el usuario corrige o precisa algo:
+     NO reescribas la paráfrasis ni vuelvas a preguntar si quedó bien. Reconoce el ajuste \
+en UNA frase breve que mencione concretamente lo que precisó, sin repetir la paráfrasis \
+(ej.: "Entiendo, fue más cansancio que enojo; lo tomo en cuenta.") y en el mismo mensaje \
+escribe [FIN_FASE]. La transición debe sentirse fluida, no como un corte: no digas que se \
+acabaron los intentos ni que hay un límite de correcciones.
 
 INTERRUPCIONES — cómo manejar mensajes que desvían la secuencia:
 

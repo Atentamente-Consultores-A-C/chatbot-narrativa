@@ -11,6 +11,14 @@ from bot.prompts.phases import (
     PHASE_OPENING_PROMPTS,
     WELCOME_MESSAGE,
 )
+from bot.prompts.express import (
+    EXPRESS_MAX_TURNS,
+    TIME_CLASSIFIER_PROMPT,
+    TIME_NORMAL,
+    TIME_SHORT,
+    TIME_UNKNOWN,
+    get_express_system_prompt,
+)
 from bot.rag.retriever import retrieve_knowledge_context
 from bot.rag.style_context import get_style_context, get_behavior_context
 from bot.db.lessons import get_relevant_lessons
@@ -18,6 +26,10 @@ from bot.db.lessons import get_relevant_lessons
 MAIN_MODEL = "gpt-4.1-mini"
 FIN_FASE = "[FIN_FASE]"
 FIN_CONV = "[FIN_CONVERSACION]"
+SURVEY_MESSAGE = (
+    "Agradecería tu opinión sobre mi calidad de servicio en la siguiente encuesta: "
+    "https://docs.google.com/forms/d/e/1FAIpQLSey7rEW9PxghC6wQE3b0rJo_PWBJaNwlZEqtASIp6nvLB8I0w/viewform"
+)
 
 _openai: AsyncOpenAI | None = None
 
@@ -48,6 +60,85 @@ async def _call_llm(system: str, history: list[dict], user_message: str | None =
         max_tokens=800,
     )
     return response.choices[0].message.content or ""
+
+
+async def _classify_time_mode(user_text: str) -> str:
+    try:
+        response = await _get_openai().chat.completions.create(
+            model=MAIN_MODEL,
+            messages=[
+                {"role": "system", "content": TIME_CLASSIFIER_PROMPT},
+                {"role": "user", "content": user_text},
+            ],
+            temperature=0,
+            max_tokens=5,
+        )
+    except Exception as e:
+        print(f"[Warning] No se pudo clasificar el tiempo disponible: {e}")
+        return TIME_UNKNOWN
+    answer = (response.choices[0].message.content or "").strip().lower()
+    if answer.startswith(TIME_SHORT):
+        return TIME_SHORT
+    if answer.startswith(TIME_NORMAL):
+        return TIME_NORMAL
+    return TIME_UNKNOWN
+
+
+async def _resolve_time_mode(collected: dict, phase: int, history: list[dict], user_message: str) -> str | None:
+    """Modo ya guardado, o el detectado en los primeros mensajes. None = todavía no se sabe."""
+    saved = collected.get("time_mode")
+    if saved:
+        return saved
+    prior_user = [m["content"] for m in history if m["role"] == "user"]
+    if phase != 1 or len(prior_user) > 1:
+        return TIME_NORMAL
+    detected = await _classify_time_mode(" ".join(prior_user + [user_message]))
+    if detected == TIME_UNKNOWN:
+        # Si no lo dijo en el primer mensaje, se le da una segunda oportunidad
+        return TIME_NORMAL if prior_user else None
+    return detected
+
+
+async def _process_express(
+    history: list[dict],
+    user_message: str,
+    collected: dict,
+    updates: dict,
+) -> dict:
+    """Modo express: algo concreto en máximo EXPRESS_MAX_TURNS mensajes, sin fases.
+    No usa lecciones del supervisor (son del flujo de 5 fases) ni se evalúa con él."""
+    turn = collected.get("express_turns", 0) + 1
+    previous_user = [m["content"] for m in history if m["role"] == "user"][-1:]
+    rag_ctx = await asyncio.to_thread(
+        retrieve_knowledge_context, " ".join(previous_user + [user_message])
+    )
+    system = get_express_system_prompt(turn, rag_ctx)
+    raw_reply = await _call_llm(system, history, user_message)
+    reply, _, conv_done = _strip_signals(raw_reply)
+
+    if not reply:
+        return {
+            "reply": "Lo siento, tuve un problema procesando tu mensaje. ¿Puedes intentarlo de nuevo?",
+            "phase_advanced": False,
+            "conversation_ended": False,
+            "lessons_used": [],
+            "raw_reply_for_evaluation": raw_reply,
+            "collected_updates": updates,
+            "skip_supervisor": True,
+        }
+
+    conv_done = conv_done or turn >= EXPRESS_MAX_TURNS
+    if conv_done:
+        reply = reply + "\n\n" + SURVEY_MESSAGE
+    return {
+        "reply": reply,
+        "phase_advanced": conv_done,
+        "conversation_ended": conv_done,
+        "lessons_used": [],
+        "raw_reply_for_evaluation": raw_reply,
+        "collected_updates": {**updates, "express_turns": turn},
+        "skip_supervisor": True,
+    }
 
 
 async def _generate_phase_opener(
@@ -91,10 +182,19 @@ async def process_message(
       "conversation_ended": bool,
       "lessons_used": list,
       "raw_reply_for_evaluation": str,
+      "collected_updates": dict,   # claves a mezclar en session.collected_data
+      "skip_supervisor": bool,     # solo en modo express
     }
     """
     phase = session.get("phase", 1)
     collected = session.get("collected_data", {})
+
+    time_mode = await _resolve_time_mode(collected, phase, history, user_message)
+    updates: dict = {}
+    if time_mode and "time_mode" not in collected:
+        updates["time_mode"] = time_mode
+    if time_mode == TIME_SHORT:
+        return await _process_express(history, user_message, collected, updates)
 
     # Recuperar lecciones, RAG y style en paralelo para reducir latencia
     lessons_task = asyncio.to_thread(get_relevant_lessons, user_message)
@@ -142,6 +242,10 @@ async def process_message(
     if next_phase_opener:
         full_reply = (reply + "\n\n" + next_phase_opener).strip() if reply else next_phase_opener
 
+    # El último mensaje de la conversación siempre lleva la encuesta después de la despedida
+    if conv_done and full_reply:
+        full_reply = full_reply + "\n\n" + SURVEY_MESSAGE
+
     # Si el modelo emitió solo [FIN_FASE] sin texto (full_reply vacío) y no hay opener,
     # no avanzamos la fase y pedimos al usuario que reintente.
     if not full_reply:
@@ -151,6 +255,7 @@ async def process_message(
             "conversation_ended": False,
             "lessons_used": lessons,
             "raw_reply_for_evaluation": raw_reply,
+            "collected_updates": updates,
         }
 
     return {
@@ -159,4 +264,5 @@ async def process_message(
         "conversation_ended": conv_done,
         "lessons_used": lessons,
         "raw_reply_for_evaluation": raw_reply,
+        "collected_updates": updates,
     }

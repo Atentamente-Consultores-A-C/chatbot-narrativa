@@ -33,3 +33,4 @@ bot/.env
 *.pem
 *.ps1
 *.sh
+*.txt

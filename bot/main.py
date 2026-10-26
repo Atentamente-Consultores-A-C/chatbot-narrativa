@@ -23,7 +23,7 @@ from bot.db.contacts import get_or_create_contact, update_contact, merge_contact
 from bot.db.sessions import get_or_create_session, update_session
 from bot.db.messages import save_message, get_history, delete_messages
 from bot.db.reports import save_report
-from bot.agents.main_agent import process_message, WELCOME_MESSAGE
+from bot.agents.main_agent import process_message, WELCOME_MESSAGE, SURVEY_MESSAGE
 from bot.agents.stub_agent import UNAVAILABLE_MESSAGE
 from bot.agents.content_agent import process_message as process_content_message
 from bot.prompts.phases import get_welcome_message
@@ -266,7 +266,7 @@ async def handle_message(
     if phase <= 5 and _is_farewell(user_message):
         await asyncio.to_thread(update_session, session_id, {"phase": 6})
         print(f"[Info] Despedida detectada, sesión cerrada para {whatsapp_id}")
-        return "Cuídate mucho. Aquí estaré cuando me necesites. 🙏"
+        return "Cuídate mucho. Aquí estaré cuando me necesites. 🙏\n\n" + SURVEY_MESSAGE
 
     # Conversación terminada — solo reactivar si el usuario saluda o vuelve a elegir el bot
     if phase > 5:
@@ -354,23 +354,32 @@ async def handle_message(
 
     agent_msg_row = await asyncio.to_thread(save_message, session_id, "assistant", reply, phase)
 
+    session_updates: dict = {}
     if phase_advanced:
-        new_phase = 6 if conv_ended else phase + 1
-        await asyncio.to_thread(update_session, session_id, {"phase": new_phase})
+        session_updates["phase"] = 6 if conv_ended else phase + 1
+    if result.get("collected_updates"):
+        session_updates["collected_data"] = {
+            **session.get("collected_data", {}),
+            **result["collected_updates"],
+        }
+    if session_updates:
+        await asyncio.to_thread(update_session, session_id, session_updates)
 
     def _log_supervisor_error(task):
         if not task.cancelled() and task.exception():
             print(f"[Supervisor] Error no capturado: {task.exception()}")
 
-    task = asyncio.create_task(
-        evaluate_response(
-            message_id=agent_msg_row["id"],
-            user_message=user_message,
-            agent_response=result["raw_reply_for_evaluation"],
-            phase=phase,
-            conversation_history=history,
+    # El modo express no sigue las 5 fases: evaluarlo generaría lecciones erróneas.
+    if not result.get("skip_supervisor"):
+        task = asyncio.create_task(
+            evaluate_response(
+                message_id=agent_msg_row["id"],
+                user_message=user_message,
+                agent_response=result["raw_reply_for_evaluation"],
+                phase=phase,
+                conversation_history=history,
+            )
         )
-    )
-    task.add_done_callback(_log_supervisor_error)
+        task.add_done_callback(_log_supervisor_error)
 
     return reply
