@@ -87,6 +87,8 @@ Reglas:
 - Es compartido entre los 3 bots (apoyo emocional, dudas sobre el curso, dudas sobre el contenido) porque describe al usuario, no a una conversación en particular.
 - Claves que el backend ya usa:
   - `course_name` (string): nombre del curso de la persona. Lo usa `DUDAS SOBRE EL CONTENIDO` para buscar solo en el material de ese curso. Debe coincidir (sin distinguir mayúsculas ni acentos) con un curso que tenga contenido cargado, por ejemplo `Educar para el Bienestar` o `PIBSE Educadores`. Si falta o no coincide, el bot le pregunta el curso al usuario una vez; si tampoco lo reconoce, responde la duda con todo el material disponible de todos los cursos.
+  - `course_id` (string, solo para `whatsapp_id` que empiezan con `edx:`): id del curso en la plataforma de cursos (eduNEXT), por ejemplo `course-v1:AtentaMente+EPB+2026`. Si viene, el bot sabe que la persona está inscrita en un curso y **no le pregunta su curso** (ni en apoyo emocional ni en dudas sobre el contenido). Se intenta mapear a un curso con contenido cargado (por `COURSE_ID_ALIASES` en `bot/user_context.py` o si el nombre del curso aparece dentro del id); si no se puede, apoyo emocional igual omite la pregunta y dudas sobre el contenido responde con el material de todos los cursos.
+- El canal se deduce del prefijo de `whatsapp_id`: número de teléfono = WhatsApp, `app:` = app de AtentaMente, `edx:` = plataforma de cursos. Los mensajes del bot son neutros: no mencionan ningún canal.
 - Cualquier otra clave se guarda y se muestra al modelo como dato de la persona, pero todavía no hay una lista fija: cada bot leerá las que necesite a medida que se implemente.
 
 ### Los 3 bots y cómo se elige uno

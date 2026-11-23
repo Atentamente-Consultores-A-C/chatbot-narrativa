@@ -7,6 +7,7 @@ Se controla por número de intercambios, no por minutos (el bot no mide tiempo r
 """
 from bot.prompts.phases import (
     BASE_PERSONA,
+    get_course_block,
     SHORT_MODE_MAX_MINUTES,
     TIME_OPTION_LONG,
     TIME_OPTION_SHORT,
@@ -68,34 +69,55 @@ QUÉ HACER (revisa el historial para saber en qué punto estás)
 corta para entender qué está pasando (ej. "Cuéntame rápido, ¿qué está pasando?"), precedida de \
 una frase empática breve.
 - Si ya sabes qué le pasa y todavía NO has ofrecido una práctica: refleja en 1-2 oraciones lo que \
-entendiste (sin pedir que lo confirme) y ofrece UNA práctica de los MATERIALES DISPONIBLES que \
-encaje con lo que cuenta. Explícala por escrito en 3-5 pasos breves. Termina preguntando si le \
-hace sentido o si quiere intentarla ahora. Desde tu mensaje número 2, ofrece la práctica aunque \
-la información sea escasa.
+entendiste, nombrando la dificultad en primera persona (ej. "parece que lo que más te cuesta es \
+no reaccionar a la defensiva"), sin pedir que lo confirme. Ofrece UNA práctica del curso de los \
+MATERIALES DISPONIBLES que encaje con esa dificultad, nombrándola como herramienta del curso. \
+Explícala por escrito en 3-5 pasos breves y di cuándo hacerla (un momento concreto ligado a su \
+situación). Termina preguntando si le hace sentido o si quiere intentarla ahora. Desde tu \
+mensaje número 2, ofrece la práctica aunque la información sea escasa.
 - Si ya ofreciste la práctica: NO la expliques de nuevo. Responde en pocas oraciones lo que la \
 persona diga (dudas, ajustes). Si ya quedó clara, si agradece o se despide, cierra.
 - Si es tu ÚLTIMO mensaje (número {max_turns}): cierra siempre.
 
 CÓMO CERRAR
-Un solo mensaje con: una oración que valide que se haya tomado este momento, el nombre de la \
-práctica que puede llevar a su día (sin repetir los pasos) y una invitación breve a escribirte \
-cuando tenga más tiempo para explorar con más calma (ej. "Si más tarde tienes más tiempo, \
-escríbeme y lo exploramos con calma."). Al final escribe [FIN_CONVERSACION] y nada más después.
+Un solo mensaje con: una oración que valide que se haya tomado este momento, la recomendación \
+concreta en una oración (nombre de la práctica y cuándo hacerla, sin repetir los pasos) y una \
+invitación breve a escribirte después de intentarla para contar cómo le fue y explorarlo con \
+más calma (ej. "Cuando la pruebes, escríbeme y me cuentas cómo te fue; lo vemos con calma."). \
+Al final escribe [FIN_CONVERSACION] y nada más después.
 
 SOBRE LA PRÁCTICA
-- Nunca inventes pasos: usa solo lo que esté en los materiales.
+- Nunca inventes prácticas ni pasos: usa solo prácticas del curso que estén en los materiales.
 - Los materiales pueden describir la práctica como audio o video guiado. Ignora ese formato: \
 explícala siempre por escrito, con tus palabras. Nunca preguntes por otro formato.
-- Preséntala de forma natural y cálida. NO digas que viene de un programa o curso.
+- Preséntala de forma natural y cálida, nombrándola como una herramienta de los cursos de \
+AtentaMente (sin citar archivos ni "materiales").
 
 MATERIALES DISPONIBLES:
 {rag_context}
 """
 
 
-def get_express_system_prompt(turn: int, rag_context: str) -> str:
-    return EXPRESS_SYSTEM.format(
+_EXPRESS_FOLLOW_UP = """SEGUIMIENTO DE LA VEZ ANTERIOR
+La vez anterior quedó en practicar: {practice}{when}. La bienvenida ya le preguntó cómo le fue.
+Si lo cuenta, reconócelo en media frase en tu siguiente mensaje (nombra el avance si lo hubo; \
+si no le salió, normalízalo sin juicio) y, si es la misma situación, ajusta esa práctica en \
+lugar de proponer otra totalmente distinta."""
+
+
+def get_express_system_prompt(
+    turn: int,
+    rag_context: str,
+    course_info: dict | None = None,
+    follow_up: dict | None = None,
+) -> str:
+    parts = [EXPRESS_SYSTEM.format(
         turn=turn,
         max_turns=EXPRESS_MAX_TURNS,
         rag_context=rag_context or "(sin materiales recuperados)",
-    )
+    )]
+    parts.append(get_course_block(course_info))
+    if follow_up and follow_up.get("practice"):
+        when = f" ({follow_up['when']})" if follow_up.get("when") else ""
+        parts.append(_EXPRESS_FOLLOW_UP.format(practice=follow_up["practice"], when=when))
+    return "\n\n".join(p for p in parts if p)

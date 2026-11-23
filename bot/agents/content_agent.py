@@ -2,7 +2,8 @@
 Agente de dudas sobre el contenido de los cursos.
 
 Responde solo con materiales recuperados por RAG (citando curso/módulo). Si no sabe
-en qué curso está la persona (ni por `context.course_name` ni por lo que ya dijo),
+en qué curso está la persona (ni por `context.course_name`, ni por `context.course_id` si
+viene de la plataforma edx, ni por lo que ya dijo),
 se lo pregunta una vez; si el curso no se reconoce, responde con todo el material
 disponible en lugar de dejar la duda sin responder.
 """
@@ -12,6 +13,7 @@ import unicodedata
 from openai import AsyncOpenAI
 from bot.prompts.content import get_content_system_prompt
 from bot.rag.retriever import retrieve_knowledge_context, get_known_courses
+from bot.user_context import get_course_info
 
 CONTENT_MODEL = "gpt-4.1-mini"
 _COURSE_SIGNAL = re.compile(r"\[CURSO:\s*(.+?)\]")
@@ -38,11 +40,16 @@ def _resolve_course(name: str | None, known: list[str]) -> str | None:
     return next((c for c in known if _norm(c) == target), None)
 
 
-def _find_course(session: dict, user_context: dict, known: list[str]) -> str | None:
-    return (
-        _resolve_course(user_context.get("course_name"), known)
-        or _resolve_course(session.get("collected_data", {}).get("course"), known)
+def _find_course(
+    session: dict, user_context: dict, known: list[str], whatsapp_id: str | None = None
+) -> tuple[str | None, bool]:
+    """(curso con contenido o None, enrolled). enrolled=True si viene de la plataforma con
+    course_id: sabemos que está en un curso aunque no se pueda mapear a uno con contenido."""
+    info = get_course_info(whatsapp_id, user_context, known)
+    course = info["course"] or _resolve_course(
+        session.get("collected_data", {}).get("course"), known
     )
+    return course, info["enrolled"]
 
 
 def _build_rag_query(history: list[dict], user_message: str) -> str:
@@ -69,12 +76,17 @@ async def process_message(
     history: list[dict],
     user_message: str,
     user_context: dict,
+    whatsapp_id: str | None = None,
 ) -> dict:
     """Retorna {"reply", "course", "general"}; "course"/"general" solo si se acaban de descubrir
     (general=True: el curso no se reconoció y se responde con todo el material)."""
     known = await asyncio.to_thread(get_known_courses)
-    course = _find_course(session, user_context, known)
-    general = bool(session.get("collected_data", {}).get("course_general"))
+    course, enrolled = _find_course(
+        session, user_context, known, whatsapp_id or session.get("whatsapp_id")
+    )
+    # Desde la plataforma no se le pregunta el curso: si su course_id no se reconoce,
+    # se responde con el material de todos los cursos.
+    general = bool(session.get("collected_data", {}).get("course_general")) or (enrolled and not course)
     new_course, new_general = None, False
 
     if known and not course and not general:

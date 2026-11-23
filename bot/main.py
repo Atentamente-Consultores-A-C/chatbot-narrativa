@@ -184,10 +184,19 @@ def _first_welcome(bot_type: str) -> str:
     return CONTENT_WELCOME_MESSAGE if bot_type == DUDAS_CONTENIDO else WELCOME_MESSAGE
 
 
-def _returning_welcome(bot_type: str, contact_name: str | None) -> str:
+def _returning_welcome(bot_type: str, contact_name: str | None, follow_up: dict | None = None) -> str:
     if bot_type == DUDAS_CONTENIDO:
         return get_content_welcome_message(contact_name)
-    return get_welcome_message(contact_name)
+    return get_welcome_message(contact_name, follow_up)
+
+
+def _carry_over_data(collected: dict | None) -> dict:
+    """Al empezar una conversación nueva solo se conserva la recomendación pendiente de la
+    anterior (para preguntar cómo le fue). Si en la anterior no se llegó a una nueva, se
+    mantiene la que seguía pendiente."""
+    collected = collected or {}
+    pending = collected.get("last_recommendation") or collected.get("follow_up")
+    return {"follow_up": pending} if pending else {}
 
 
 def _parse_debug_command(text: str) -> str | None:
@@ -271,11 +280,14 @@ async def handle_message(
     # Conversación terminada — solo reactivar si el usuario saluda o vuelve a elegir el bot
     if phase > 5:
         if _is_greeting(user_message) or matched_bot_type:
-            await asyncio.to_thread(update_session, session_id, {"phase": 1, "collected_data": {}})
+            carried = _carry_over_data(session.get("collected_data"))
+            await asyncio.to_thread(update_session, session_id, {"phase": 1, "collected_data": carried})
             session["phase"] = 1
-            session["collected_data"] = {}
+            session["collected_data"] = carried
             phase = 1
-            welcome = _returning_welcome(active_bot_type, session.get("contact_name"))
+            welcome = _returning_welcome(
+                active_bot_type, session.get("contact_name"), carried.get("follow_up")
+            )
             await asyncio.to_thread(save_message, session_id, "assistant", welcome, 1)
             return welcome
         else:
@@ -290,7 +302,11 @@ async def handle_message(
     if matched_bot_type and history:
         welcomes = {
             _first_welcome(active_bot_type),
-            _returning_welcome(active_bot_type, session.get("contact_name")),
+            _returning_welcome(
+                active_bot_type,
+                session.get("contact_name"),
+                session.get("collected_data", {}).get("follow_up"),
+            ),
         }
         if history[-1]["role"] == "assistant" and history[-1]["content"] in welcomes:
             return None
@@ -321,7 +337,9 @@ async def handle_message(
     if active_bot_type == DUDAS_CONTENIDO:
         content_ctx = {"nombre": session.get("contact_name"), **user_context}
         try:
-            content_result = await process_content_message(session, history, user_message, content_ctx)
+            content_result = await process_content_message(
+                session, history, user_message, content_ctx, whatsapp_id
+            )
         except Exception as e:
             print(f"[Error] content_agent falló para {whatsapp_id}: {e}")
             return (
@@ -340,7 +358,7 @@ async def handle_message(
 
     # Procesar con el agente principal
     try:
-        result = await process_message(session, history, user_message)
+        result = await process_message(session, history, user_message, user_context, whatsapp_id)
     except Exception as e:
         print(f"[Error] process_message falló para {whatsapp_id}: {e}")
         return (

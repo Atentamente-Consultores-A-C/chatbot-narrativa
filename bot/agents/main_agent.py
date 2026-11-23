@@ -5,10 +5,13 @@ Maneja las 5 fases de la conversación. Detecta la señal [FIN_FASE] o
 [FIN_CONVERSACION] en la respuesta del modelo para saber cuándo transitar.
 """
 import asyncio
+import json
+from datetime import date
 from openai import AsyncOpenAI
 from bot.prompts.phases import (
     get_phase_system_prompt,
-    PHASE_OPENING_PROMPTS,
+    get_phase_opening_prompt,
+    get_extraction_prompt,
     WELCOME_MESSAGE,
 )
 from bot.prompts.express import (
@@ -19,7 +22,8 @@ from bot.prompts.express import (
     TIME_UNKNOWN,
     get_express_system_prompt,
 )
-from bot.rag.retriever import retrieve_knowledge_context
+from bot.rag.retriever import retrieve_knowledge_context, get_known_courses
+from bot.user_context import get_course_info, find_course_in_text, resolve_course_name
 from bot.rag.style_context import get_style_context, get_behavior_context
 from bot.db.lessons import get_relevant_lessons
 
@@ -84,6 +88,94 @@ async def _classify_time_mode(user_text: str) -> str:
     return TIME_UNKNOWN
 
 
+async def _extract_phase_data(key, history: list[dict]) -> dict:
+    """Resume en JSON lo que se obtuvo en la fase que acaba de terminar (ver
+    _EXTRACTION_FIELDS en prompts/phases.py). {} si falla: la conversación sigue igual."""
+    system = get_extraction_prompt(key)
+    if not system:
+        return {}
+    transcript = "\n".join(
+        f"{'Persona' if m['role'] == 'user' else 'Acompañante'}: {m['content']}"
+        for m in history[-24:]
+    )
+    try:
+        response = await _get_openai().chat.completions.create(
+            model=MAIN_MODEL,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": transcript},
+            ],
+            temperature=0,
+            max_tokens=400,
+            response_format={"type": "json_object"},
+        )
+        data = json.loads(response.choices[0].message.content or "{}")
+    except Exception as e:
+        print(f"[Warning] No se pudieron extraer los datos de la fase {key}: {e}")
+        return {}
+    return {k: str(v).strip() for k, v in data.items() if isinstance(v, (str, int, float)) and str(v).strip()}
+
+
+def _map_extracted(phase, data: dict, known: list[str]) -> dict:
+    """Convierte la extracción en las claves de collected_data que usan los prompts."""
+    if phase == 4 or phase == "express":
+        out = {}
+        if data.get("difficulty"):
+            out["difficulty"] = data["difficulty"]
+        if data.get("practice"):
+            rec = {k: data.get(k, "") for k in ("practice", "when", "observe")}
+            out["recommendation"] = rec
+            out["practices"] = "; ".join(
+                part for part in (
+                    rec["practice"],
+                    f"cuándo: {rec['when']}" if rec["when"] else "",
+                    f"observar: {rec['observe']}" if rec["observe"] else "",
+                ) if part
+            )
+        course = resolve_course_name(data.get("course"), known)
+        if course:
+            out["course"] = course
+        return out
+    return data
+
+
+def _build_last_recommendation(collected: dict) -> dict | None:
+    """Lo que se guarda para el seguimiento de la próxima conversación."""
+    rec = collected.get("recommendation")
+    if not rec or not rec.get("practice"):
+        return None
+    return {
+        **rec,
+        "difficulty": collected.get("difficulty", ""),
+        "date": date.today().isoformat(),
+    }
+
+
+async def _resolve_course_info(
+    whatsapp_id: str | None,
+    user_context: dict | None,
+    collected: dict,
+    history: list[dict],
+    user_message: str,
+) -> dict:
+    """Curso de la persona: context (course_name o, en edx, course_id) > lo que dijo en la
+    fase 4 > nombre de curso mencionado en sus mensajes recientes."""
+    try:
+        known = await asyncio.to_thread(get_known_courses)
+    except Exception as e:
+        print(f"[Warning] No se pudieron cargar los cursos: {e}")
+        known = []
+    info = get_course_info(whatsapp_id, user_context, known)
+    if not info["course"]:
+        recent_user = [m["content"] for m in history[-12:] if m["role"] == "user"] + [user_message]
+        info["course"] = (
+            resolve_course_name(collected.get("course"), known)
+            or find_course_in_text(recent_user, known)
+        )
+    info["known"] = known
+    return info
+
+
 async def _resolve_time_mode(collected: dict, phase: int, history: list[dict], user_message: str) -> str | None:
     """Modo ya guardado, o el detectado en los primeros mensajes. None = todavía no se sabe."""
     saved = collected.get("time_mode")
@@ -104,15 +196,18 @@ async def _process_express(
     user_message: str,
     collected: dict,
     updates: dict,
+    course_info: dict,
 ) -> dict:
     """Modo express: algo concreto en máximo EXPRESS_MAX_TURNS mensajes, sin fases.
     No usa lecciones del supervisor (son del flujo de 5 fases) ni se evalúa con él."""
     turn = collected.get("express_turns", 0) + 1
     previous_user = [m["content"] for m in history if m["role"] == "user"][-1:]
     rag_ctx = await asyncio.to_thread(
-        retrieve_knowledge_context, " ".join(previous_user + [user_message])
+        retrieve_knowledge_context,
+        " ".join(previous_user + [user_message]),
+        course_info.get("course"),
     )
-    system = get_express_system_prompt(turn, rag_ctx)
+    system = get_express_system_prompt(turn, rag_ctx, course_info, collected.get("follow_up"))
     raw_reply = await _call_llm(system, history, user_message)
     reply, _, conv_done = _strip_signals(raw_reply)
 
@@ -128,7 +223,21 @@ async def _process_express(
         }
 
     conv_done = conv_done or turn >= EXPRESS_MAX_TURNS
+    updates = {**updates, "express_turns": turn}
     if conv_done:
+        full_history = history + [
+            {"role": "user", "content": user_message},
+            {"role": "assistant", "content": reply},
+        ]
+        extracted = _map_extracted(
+            "express",
+            await _extract_phase_data("express", full_history),
+            course_info.get("known", []),
+        )
+        updates.update(extracted)
+        last_rec = _build_last_recommendation({**collected, **updates})
+        if last_rec:
+            updates["last_recommendation"] = last_rec
         reply = reply + "\n\n" + SURVEY_MESSAGE
     return {
         "reply": reply,
@@ -136,22 +245,32 @@ async def _process_express(
         "conversation_ended": conv_done,
         "lessons_used": [],
         "raw_reply_for_evaluation": raw_reply,
-        "collected_updates": {**updates, "express_turns": turn},
+        "collected_updates": updates,
         "skip_supervisor": True,
     }
 
 
+def _phase4_rag_query(collected: dict, extra: str = "") -> str:
+    parts = [
+        collected.get("main_imbalance", ""),
+        collected.get("difficulty", ""),
+        "práctica",
+        extra,
+    ]
+    return " ".join(p for p in parts if p).strip() or "desequilibrio mental práctica meditativa"
+
+
 async def _generate_phase_opener(
     next_phase: int,
-    session: dict,
+    collected: dict,
     history: list[dict],
-) -> str:
+    course_info: dict,
+) -> tuple[str, bool]:
+    """Primer mensaje de la fase siguiente. Retorna (texto, conversación_terminada)."""
     rag_ctx = ""
     if next_phase == 4:
-        imbalance = session.get("collected_data", {}).get("main_imbalance", "")
         rag_ctx = await asyncio.to_thread(
-            retrieve_knowledge_context,
-            imbalance or "desequilibrio mental práctica meditativa",
+            retrieve_knowledge_context, _phase4_rag_query(collected), course_info.get("course")
         )
 
     style = await asyncio.to_thread(get_style_context)
@@ -159,20 +278,21 @@ async def _generate_phase_opener(
         behavior = await asyncio.to_thread(get_behavior_context)
         style = (style + "\n\n" + behavior).strip()
 
-    system = get_phase_system_prompt(
-        next_phase, session.get("collected_data", {}), rag_ctx, style
-    )
-    opening_instruction = PHASE_OPENING_PROMPTS.get(next_phase, "Continúa fluidamente.")
+    system = get_phase_system_prompt(next_phase, collected, rag_ctx, style, course_info)
+    opening_instruction = get_phase_opening_prompt(next_phase, collected, course_info)
 
     opener = await _call_llm(system, history, opening_instruction)
-    clean, _, _ = _strip_signals(opener)
-    return clean
+    clean, _, conv_done = _strip_signals(opener)
+    # El cierre (fase 5) siempre termina la conversación, aunque el modelo olvide la señal.
+    return clean, conv_done or next_phase == 5
 
 
 async def process_message(
     session: dict,
     history: list[dict],
     user_message: str,
+    user_context: dict | None = None,
+    whatsapp_id: str | None = None,
 ) -> dict:
     """
     Procesa un mensaje del usuario y retorna:
@@ -193,17 +313,19 @@ async def process_message(
     updates: dict = {}
     if time_mode and "time_mode" not in collected:
         updates["time_mode"] = time_mode
+    course_info = await _resolve_course_info(
+        whatsapp_id or session.get("whatsapp_id"), user_context, collected, history, user_message
+    )
     if time_mode == TIME_SHORT:
-        return await _process_express(history, user_message, collected, updates)
+        return await _process_express(history, user_message, collected, updates, course_info)
 
     # Recuperar lecciones, RAG y style en paralelo para reducir latencia
     lessons_task = asyncio.to_thread(get_relevant_lessons, user_message)
     style_task = asyncio.to_thread(get_style_context)
 
     if phase == 4:
-        imbalance = collected.get("main_imbalance", "")
-        query = f"{imbalance} práctica meditativa {user_message}"
-        rag_task = asyncio.to_thread(retrieve_knowledge_context, query)
+        query = _phase4_rag_query(collected, user_message)
+        rag_task = asyncio.to_thread(retrieve_knowledge_context, query, course_info.get("course"))
         lessons, rag_ctx, style_ctx = await asyncio.gather(lessons_task, rag_task, style_task)
         behavior = await asyncio.to_thread(get_behavior_context)
         style_ctx = (style_ctx + "\n\n" + behavior).strip()
@@ -222,21 +344,37 @@ async def process_message(
             + "\n\n".join(lines)
         )
 
-    system = get_phase_system_prompt(phase, collected, rag_ctx, style_ctx) + lessons_block
+    system = get_phase_system_prompt(phase, collected, rag_ctx, style_ctx, course_info) + lessons_block
 
     raw_reply = await _call_llm(system, history, user_message)
     reply, phase_done, conv_done = _strip_signals(raw_reply)
 
     next_phase_opener = ""
-    if phase_done and not conv_done:
-        next_phase = phase + 1
-        if next_phase <= 4:
-            next_history = history + [
-                {"role": "user", "content": user_message},
-                {"role": "assistant", "content": reply},
-            ]
-            opener = await _generate_phase_opener(next_phase, session, next_history)
-            next_phase_opener = opener
+    if phase_done and not conv_done and phase <= 4:
+        next_history = history + [
+            {"role": "user", "content": user_message},
+            {"role": "assistant", "content": reply},
+        ]
+        # Guardar lo que dejó la fase que termina, para que los prompts siguientes lo usen
+        extracted = _map_extracted(
+            phase,
+            await _extract_phase_data(phase, next_history),
+            course_info.get("known", []),
+        )
+        updates.update(extracted)
+        if extracted.get("course") and not course_info.get("course"):
+            course_info["course"] = extracted["course"]
+        next_collected = {**collected, **updates}
+        # Tras la fase 4 se genera el cierre de inmediato (fase 5) con la recomendación ya extraída
+        next_phase_opener, opener_ended = await _generate_phase_opener(
+            phase + 1, next_collected, next_history, course_info
+        )
+        conv_done = conv_done or opener_ended
+
+    if conv_done:
+        last_rec = _build_last_recommendation({**collected, **updates})
+        if last_rec:
+            updates["last_recommendation"] = last_rec
 
     full_reply = reply
     if next_phase_opener:

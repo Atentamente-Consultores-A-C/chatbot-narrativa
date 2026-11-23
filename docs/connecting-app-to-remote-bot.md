@@ -87,6 +87,8 @@ Rules:
 - It is shared across all 3 bots (emotional support, course questions, content questions) because it describes the user, not one specific conversation.
 - Keys the backend already uses:
   - `course_name` (string): the person's course. `DUDAS SOBRE EL CONTENIDO` uses it to search only that course's material. It must match (ignoring case and accents) a course that has content loaded, e.g. `Educar para el Bienestar` or `PIBSE Educadores`. If it is missing or does not match, the bot asks the user which course they mean once; if that is not recognized either, it answers using all the material available across every course.
+  - `course_id` (string, only for `whatsapp_id` values starting with `edx:`): the course id on the course platform (eduNEXT), e.g. `course-v1:AtentaMente+EPB+2026`. When present, the bot knows the person is enrolled in a course and **does not ask for their course** (in emotional support or content questions). It tries to map it to a course with loaded content (via `COURSE_ID_ALIASES` in `bot/user_context.py`, or if the course name appears inside the id); if it can't, emotional support still skips the question and content questions answers using all courses' material.
+- The channel is inferred from the `whatsapp_id` prefix: phone number = WhatsApp, `app:` = AtentaMente app, `edx:` = course platform. Bot messages stay neutral and never name a channel.
 - Any other key is stored and shown to the model as information about the person, but there is no fixed list yet: each bot will read whichever ones it needs as it gets built out.
 
 ### The 3 bots and how one gets selected
