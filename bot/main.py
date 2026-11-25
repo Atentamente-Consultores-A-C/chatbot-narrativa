@@ -1,9 +1,10 @@
 """
 FastAPI webhook para Turn.io.
 
-Turn.io envia:
+Turn.io / la app / la plataforma envían:
   POST /webhook
-  { "message": "...", "whatsapp_id": "...", "contact_name": "..." }
+  { "message": "...", "whatsapp_id": "...", "anonymized_id": "...", "contact_name": "...",
+    "context": {...} }
 
 Esperamos de vuelta:
   { "reply": "..." }
@@ -19,7 +20,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from bot.rag.style_context import get_style_context
-from bot.db.contacts import get_or_create_contact, update_contact, merge_contact_context
+from bot.db.contacts import (
+    get_or_create_contact,
+    merge_contact_context,
+    set_anonymized_id,
+    update_contact,
+)
 from bot.db.sessions import get_or_create_session, update_session
 from bot.db.messages import save_message, get_history, delete_messages
 from bot.db.reports import save_report
@@ -29,6 +35,7 @@ from bot.agents.content_agent import process_message as process_content_message
 from bot.prompts.phases import get_welcome_message
 from bot.prompts.content import CONTENT_WELCOME_MESSAGE, get_content_welcome_message
 from bot.agents.supervisor import evaluate_response
+from bot.user_context import get_profile
 from bot.rag.retriever import get_known_courses
 from bot.bot_router import detect_bot_type, APOYO_EMOCIONAL, DUDAS_CONTENIDO, STUB_BOT_TYPES
 
@@ -115,6 +122,7 @@ async def webhook(request: Request):
         raw_str = raw.decode("utf-8", errors="replace")
         print(f"[Warning] JSON inválido, intentando extracción por regex: {raw_str[:300]}")
         wid = re.search(r'"whatsapp_id"\s*:\s*"([^"]+)"', raw_str)
+        anon = re.search(r'"anonymized_id"\s*:\s*"([^"]*)"', raw_str)
         name = re.search(r'"contact_name"\s*:\s*"([^"]*)"', raw_str)
         # Intentamos dos formatos: message antes o después de whatsapp_id
         msg_match = re.search(
@@ -126,6 +134,7 @@ async def webhook(request: Request):
             return JSONResponse({"reply": "Lo siento, hubo un error procesando tu mensaje. ¿Puedes intentarlo de nuevo?"})
         body = {
             "whatsapp_id": wid.group(1),
+            "anonymized_id": anon.group(1) if anon else "",
             "contact_name": name.group(1) if name else "",
             "message": msg_match.group(1).replace('\\"', '"') if msg_match else "",
         }
@@ -135,12 +144,17 @@ async def webhook(request: Request):
     user_message = (body.get("message") or "").strip()
     raw_context = body.get("context")
     context = raw_context if isinstance(raw_context, dict) else None
+    # anonymized_id: id anónimo de la persona (para cruzar con la base de evaluación sin
+    # datos personales). Se guarda en la columna contacts.anonymized_id; nunca llega al modelo.
+    anonymized_id = str(body.get("anonymized_id") or "").strip()
+    if anonymized_id.startswith("@"):  # plantilla de Turn.io sin resolver
+        anonymized_id = ""
 
     if not whatsapp_id or not user_message:
         raise HTTPException(status_code=400, detail="Faltan campos requeridos")
 
     async with _get_user_lock(whatsapp_id):
-        reply = await handle_message(whatsapp_id, contact_name, user_message, context)
+        reply = await handle_message(whatsapp_id, contact_name, user_message, context, anonymized_id)
 
     # None o "" = no hay respuesta que mostrar.
     # Devolver {} sin clave "reply" — Turn.io no renderiza nada si el campo está ausente
@@ -164,7 +178,7 @@ _FAREWELLS = {
     "ok gracias", "ok, gracias", "gracias", "muchas gracias", "de nada", "entendido",
     "perfecto gracias", "listo gracias", "hasta la próxima", "hasta la proxima",
     "no gracias", "no, gracias", "ya gracias", "ya, gracias",
-    "salir",
+    "salir", "terminar",
 }
 
 _UNRESOLVED_TEMPLATE = re.compile(r"@event\.|@contact\.|{{.*?}}|Starting preview\.\.\.")
@@ -180,14 +194,16 @@ def _is_farewell(text: str) -> bool:
 def _is_invalid_template(text: str) -> bool:
     return bool(_UNRESOLVED_TEMPLATE.search(text))
 
-def _first_welcome(bot_type: str) -> str:
-    return CONTENT_WELCOME_MESSAGE if bot_type == DUDAS_CONTENIDO else WELCOME_MESSAGE
-
-
-def _returning_welcome(bot_type: str, contact_name: str | None, follow_up: dict | None = None) -> str:
+def _first_welcome(bot_type: str, name: str | None = None) -> str:
     if bot_type == DUDAS_CONTENIDO:
-        return get_content_welcome_message(contact_name)
-    return get_welcome_message(contact_name, follow_up)
+        return CONTENT_WELCOME_MESSAGE
+    return get_welcome_message(name, first_time=True)
+
+
+def _returning_welcome(bot_type: str, name: str | None, follow_up: dict | None = None) -> str:
+    if bot_type == DUDAS_CONTENIDO:
+        return get_content_welcome_message(name)
+    return get_welcome_message(name, follow_up)
 
 
 def _carry_over_data(collected: dict | None) -> dict:
@@ -215,12 +231,15 @@ async def handle_message(
     contact_name: str,
     user_message: str,
     context: dict | None = None,
+    anonymized_id: str | None = None,
 ) -> str | None:
     if _is_invalid_template(user_message):
         print(f"[Warning] Mensaje con template sin resolver ignorado: {user_message!r}")
         return None
 
     contact = await asyncio.to_thread(get_or_create_contact, whatsapp_id, contact_name)
+    if anonymized_id and contact.get("anonymized_id") != anonymized_id:
+        await asyncio.to_thread(set_anonymized_id, whatsapp_id, anonymized_id)
     user_context = contact.get("context") or {}
     if context:
         user_context = await asyncio.to_thread(merge_contact_context, whatsapp_id, contact, context)
@@ -236,6 +255,8 @@ async def handle_message(
     session = await asyncio.to_thread(get_or_create_session, whatsapp_id, active_bot_type, contact_name)
     session_id = session["id"]
     phase = session["phase"]
+    # Nombre para saludar: el del context (plataforma/app) tiene prioridad sobre el de WhatsApp
+    display_name = get_profile(user_context, session.get("contact_name")).get("nombre")
 
     # Bots todavía no implementados: una sola respuesta fija y la conversación
     # queda cerrada — no se procesa ni se responde nada más hasta que el usuario
@@ -253,7 +274,7 @@ async def handle_message(
     if debug_cmd is not None:
         if debug_cmd == "reset":
             await asyncio.to_thread(update_session, session_id, {"phase": 1, "collected_data": {}})
-            welcome = _first_welcome(active_bot_type)
+            welcome = _first_welcome(active_bot_type, display_name)
             await asyncio.to_thread(save_message, session_id, "assistant", welcome, 1)
             print(f"[Debug] Sesión reseteada para {whatsapp_id}")
             return welcome
@@ -264,7 +285,7 @@ async def handle_message(
         elif debug_cmd == "clear":
             await asyncio.to_thread(delete_messages, session_id)
             await asyncio.to_thread(update_session, session_id, {"phase": 1, "collected_data": {}})
-            welcome = _first_welcome(active_bot_type)
+            welcome = _first_welcome(active_bot_type, display_name)
             await asyncio.to_thread(save_message, session_id, "assistant", welcome, 1)
             print(f"[Debug] Historial borrado para {whatsapp_id}")
             return welcome
@@ -285,9 +306,7 @@ async def handle_message(
             session["phase"] = 1
             session["collected_data"] = carried
             phase = 1
-            welcome = _returning_welcome(
-                active_bot_type, session.get("contact_name"), carried.get("follow_up")
-            )
+            welcome = _returning_welcome(active_bot_type, display_name, carried.get("follow_up"))
             await asyncio.to_thread(save_message, session_id, "assistant", welcome, 1)
             return welcome
         else:
@@ -301,10 +320,10 @@ async def handle_message(
     # - Si había una conversación en curso, se retoma con el último mensaje del bot.
     if matched_bot_type and history:
         welcomes = {
-            _first_welcome(active_bot_type),
+            _first_welcome(active_bot_type, display_name),
             _returning_welcome(
                 active_bot_type,
-                session.get("contact_name"),
+                display_name,
                 session.get("collected_data", {}).get("follow_up"),
             ),
         }
@@ -314,7 +333,7 @@ async def handle_message(
         if last_bot:
             return last_bot
 
-    welcome_first = _first_welcome(active_bot_type)
+    welcome_first = _first_welcome(active_bot_type, display_name)
 
     # Primer contacto vía CLI
     if user_message == "__init__":
@@ -335,7 +354,7 @@ async def handle_message(
     await asyncio.to_thread(save_message, session_id, "user", user_message, phase)
 
     if active_bot_type == DUDAS_CONTENIDO:
-        content_ctx = {"nombre": session.get("contact_name"), **user_context}
+        content_ctx = {**user_context, "contact_name": session.get("contact_name")}
         try:
             content_result = await process_content_message(
                 session, history, user_message, content_ctx, whatsapp_id

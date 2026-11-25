@@ -6,6 +6,7 @@ Maneja las 5 fases de la conversación. Detecta la señal [FIN_FASE] o
 """
 import asyncio
 import json
+import re
 from datetime import date
 from openai import AsyncOpenAI
 from bot.prompts.phases import (
@@ -23,7 +24,15 @@ from bot.prompts.express import (
     get_express_system_prompt,
 )
 from bot.rag.retriever import retrieve_knowledge_context, get_known_courses
-from bot.user_context import get_course_info, find_course_in_text, resolve_course_name
+from bot.user_context import (
+    DEFAULT_PROGRAM,
+    PROGRAM_EPB,
+    find_course_in_text,
+    get_course_info,
+    get_profile,
+    program_from_name,
+    resolve_course_name,
+)
 from bot.rag.style_context import get_style_context, get_behavior_context
 from bot.db.lessons import get_relevant_lessons
 
@@ -50,6 +59,32 @@ def _strip_signals(text: str) -> tuple[str, bool, bool]:
     fin_fase = FIN_FASE in text or fin_conv
     clean = text.replace(FIN_FASE, "").replace(FIN_CONV, "").strip()
     return clean, fin_fase, fin_conv
+
+
+_QUESTION_RE = re.compile(r"¿[^¿?]*\?")
+
+
+def _drop_questions(text: str) -> str:
+    """Quita todas las preguntas (¿...?). Se usa en el mensaje que cierra una fase cuando
+    a continuación va la pregunta de apertura de la siguiente."""
+    cleaned = _QUESTION_RE.sub("", text)
+    return re.sub(r"[ \t]{2,}", " ", cleaned).strip()
+
+
+def _keep_one_question(text: str) -> str:
+    """Si el modelo hizo más de una pregunta, deja solo la primera (regla de una pregunta
+    por mensaje)."""
+    questions = list(_QUESTION_RE.finditer(text))
+    if len(questions) <= 1:
+        return text
+    out, last = [], 0
+    for i, m in enumerate(questions):
+        out.append(text[last:m.start()])
+        if i == 0:
+            out.append(m.group(0))
+        last = m.end()
+    out.append(text[last:])
+    return re.sub(r"[ \t]{2,}", " ", "".join(out)).strip()
 
 
 async def _call_llm(system: str, history: list[dict], user_message: str | None = None) -> str:
@@ -157,9 +192,11 @@ async def _resolve_course_info(
     collected: dict,
     history: list[dict],
     user_message: str,
+    contact_name: str | None = None,
 ) -> dict:
     """Curso de la persona: context (course_name o, en edx, course_id) > lo que dijo en la
-    fase 4 > nombre de curso mencionado en sus mensajes recientes."""
+    fase 4 > nombre de curso mencionado en sus mensajes recientes.
+    Agrega "flow" (programa cuyo flujo se usa, fijo durante la conversación) y "profile"."""
     try:
         known = await asyncio.to_thread(get_known_courses)
     except Exception as e:
@@ -173,6 +210,12 @@ async def _resolve_course_info(
             or find_course_in_text(recent_user, known)
         )
     info["known"] = known
+    if info["course"] and not info["program"]:
+        info["program"] = program_from_name(info["course"])
+    # El flujo se decide al inicio y se guarda en collected_data["program"] para no cambiar
+    # de rama a media conversación.
+    info["flow"] = collected.get("program") or info["program"] or DEFAULT_PROGRAM
+    info["profile"] = get_profile(user_context, contact_name)
     return info
 
 
@@ -207,9 +250,14 @@ async def _process_express(
         " ".join(previous_user + [user_message]),
         course_info.get("course"),
     )
-    system = get_express_system_prompt(turn, rag_ctx, course_info, collected.get("follow_up"))
+    system = get_express_system_prompt(
+        turn, rag_ctx, course_info, collected.get("follow_up"),
+        program=course_info.get("flow"), profile=course_info.get("profile"),
+    )
     raw_reply = await _call_llm(system, history, user_message)
     reply, _, conv_done = _strip_signals(raw_reply)
+    if not conv_done:
+        reply = _keep_one_question(reply)
 
     if not reply:
         return {
@@ -253,6 +301,7 @@ async def _process_express(
 def _phase4_rag_query(collected: dict, extra: str = "") -> str:
     parts = [
         collected.get("main_imbalance", ""),
+        collected.get("trigger_response", ""),
         collected.get("difficulty", ""),
         "práctica",
         extra,
@@ -278,11 +327,16 @@ async def _generate_phase_opener(
         behavior = await asyncio.to_thread(get_behavior_context)
         style = (style + "\n\n" + behavior).strip()
 
-    system = get_phase_system_prompt(next_phase, collected, rag_ctx, style, course_info)
-    opening_instruction = get_phase_opening_prompt(next_phase, collected, course_info)
+    flow = course_info.get("flow")
+    system = get_phase_system_prompt(
+        next_phase, collected, rag_ctx, style, course_info, flow, course_info.get("profile")
+    )
+    opening_instruction = get_phase_opening_prompt(next_phase, collected, course_info, flow)
 
     opener = await _call_llm(system, history, opening_instruction)
     clean, _, conv_done = _strip_signals(opener)
+    if next_phase != 5:
+        clean = _keep_one_question(clean)
     # El cierre (fase 5) siempre termina la conversación, aunque el modelo olvide la señal.
     return clean, conv_done or next_phase == 5
 
@@ -309,13 +363,23 @@ async def process_message(
     phase = session.get("phase", 1)
     collected = session.get("collected_data", {})
 
-    time_mode = await _resolve_time_mode(collected, phase, history, user_message)
+    # En paralelo: clasificar el tiempo disponible y resolver curso/programa/perfil
+    time_mode, course_info = await asyncio.gather(
+        _resolve_time_mode(collected, phase, history, user_message),
+        _resolve_course_info(
+            whatsapp_id or session.get("whatsapp_id"),
+            user_context,
+            collected,
+            history,
+            user_message,
+            session.get("contact_name"),
+        ),
+    )
     updates: dict = {}
     if time_mode and "time_mode" not in collected:
         updates["time_mode"] = time_mode
-    course_info = await _resolve_course_info(
-        whatsapp_id or session.get("whatsapp_id"), user_context, collected, history, user_message
-    )
+    if "program" not in collected:
+        updates["program"] = course_info["flow"]
     if time_mode == TIME_SHORT:
         return await _process_express(history, user_message, collected, updates, course_info)
 
@@ -344,10 +408,18 @@ async def process_message(
             + "\n\n".join(lines)
         )
 
-    system = get_phase_system_prompt(phase, collected, rag_ctx, style_ctx, course_info) + lessons_block
+    system = get_phase_system_prompt(
+        phase, collected, rag_ctx, style_ctx, course_info,
+        course_info.get("flow"), course_info.get("profile"),
+    ) + lessons_block
 
     raw_reply = await _call_llm(system, history, user_message)
     reply, phase_done, conv_done = _strip_signals(raw_reply)
+    if phase_done and not conv_done and phase <= 4:
+        # La pregunta la pone la apertura de la siguiente fase: aquí no debe ir ninguna
+        reply = _drop_questions(reply)
+    elif not conv_done:
+        reply = _keep_one_question(reply)
 
     next_phase_opener = ""
     if phase_done and not conv_done and phase <= 4:
@@ -356,9 +428,12 @@ async def process_message(
             {"role": "assistant", "content": reply},
         ]
         # Guardar lo que dejó la fase que termina, para que los prompts siguientes lo usen
+        extract_key = phase
+        if course_info.get("flow") == PROGRAM_EPB and phase in (2, 3):
+            extract_key = f"epb_{phase}"
         extracted = _map_extracted(
             phase,
-            await _extract_phase_data(phase, next_history),
+            await _extract_phase_data(extract_key, next_history),
             course_info.get("known", []),
         )
         updates.update(extracted)

@@ -5,9 +5,11 @@ Modo express de apoyo emocional: para quien dice tener poco tiempo.
 En vez de las 5 fases, da algo concreto en un máximo de EXPRESS_MAX_TURNS mensajes del bot.
 Se controla por número de intercambios, no por minutos (el bot no mide tiempo real).
 """
+from bot.prompts.course_maps import get_course_map
 from bot.prompts.phases import (
     BASE_PERSONA,
     get_course_block,
+    get_profile_block,
     SHORT_MODE_MAX_MINUTES,
     TIME_OPTION_LONG,
     TIME_OPTION_SHORT,
@@ -110,13 +112,17 @@ def get_express_system_prompt(
     rag_context: str,
     course_info: dict | None = None,
     follow_up: dict | None = None,
+    program: str | None = None,
+    profile: dict | None = None,
 ) -> str:
     parts = [EXPRESS_SYSTEM.format(
         turn=turn,
         max_turns=EXPRESS_MAX_TURNS,
         rag_context=rag_context or "(sin materiales recuperados)",
     )]
+    parts.append(get_profile_block(profile))
     parts.append(get_course_block(course_info))
+    parts.append(get_course_map(program))
     if follow_up and follow_up.get("practice"):
         when = f" ({follow_up['when']})" if follow_up.get("when") else ""
         parts.append(_EXPRESS_FOLLOW_UP.format(practice=follow_up["practice"], when=when))

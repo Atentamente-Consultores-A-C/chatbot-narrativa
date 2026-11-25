@@ -15,6 +15,7 @@ create extension if not exists vector;
 create table contacts (
   whatsapp_id text primary key,
   contact_name text,
+  anonymized_id text,
   active_bot_type text check (active_bot_type in ('apoyo_emocional', 'dudas_curso', 'dudas_contenido')),
   context jsonb not null default '{}',
   created_at timestamptz not null default now(),

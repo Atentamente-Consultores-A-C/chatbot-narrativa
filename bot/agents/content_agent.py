@@ -13,7 +13,7 @@ import unicodedata
 from openai import AsyncOpenAI
 from bot.prompts.content import get_content_system_prompt
 from bot.rag.retriever import retrieve_knowledge_context, get_known_courses
-from bot.user_context import get_course_info
+from bot.user_context import get_course_info, get_profile
 
 CONTENT_MODEL = "gpt-4.1-mini"
 _COURSE_SIGNAL = re.compile(r"\[CURSO:\s*(.+?)\]")
@@ -79,7 +79,9 @@ async def process_message(
     whatsapp_id: str | None = None,
 ) -> dict:
     """Retorna {"reply", "course", "general"}; "course"/"general" solo si se acaban de descubrir
-    (general=True: el curso no se reconoció y se responde con todo el material)."""
+    (general=True: el curso no se reconoció y se responde con todo el material).
+    `user_context` es el context completo del contacto; al modelo solo llega el perfil."""
+    profile = get_profile(user_context, user_context.get("contact_name"))
     known = await asyncio.to_thread(get_known_courses)
     course, enrolled = _find_course(
         session, user_context, known, whatsapp_id or session.get("whatsapp_id")
@@ -90,7 +92,7 @@ async def process_message(
     new_course, new_general = None, False
 
     if known and not course and not general:
-        system = get_content_system_prompt(user_context, known, None)
+        system = get_content_system_prompt(profile, known, None)
         raw = await _call_llm(system, history, user_message)
         signal = _COURSE_SIGNAL.search(raw)
         if not signal:
@@ -105,7 +107,7 @@ async def process_message(
     rag_ctx = await asyncio.to_thread(
         retrieve_knowledge_context, _build_rag_query(history, user_message), course
     )
-    system = get_content_system_prompt(user_context, known, course, rag_ctx, general)
+    system = get_content_system_prompt(profile, known, course, rag_ctx, general)
     raw = await _call_llm(system, history, user_message)
     reply = _COURSE_SIGNAL.sub("", raw).strip()
     if not reply:

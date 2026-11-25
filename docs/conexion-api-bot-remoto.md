@@ -60,6 +60,7 @@ La aplicación debe enviar este JSON en cada turno:
 | Campo | Tipo | Obligatorio | Descripción |
 | --- | --- | --- | --- |
 | `whatsapp_id` | string | Sí | Identificador único y estable del usuario. Determina a qué conversación pertenece el mensaje. |
+| `anonymized_id` | string | No | Id anónimo de la persona (para cruzar datos sin información personal). Se guarda en la columna `contacts.anonymized_id`; nunca se le muestra al modelo. |
 | `contact_name` | string | No | Nombre para personalizar la conversación. Puede enviarse como `""`. Solo se guarda al crear la sesión. |
 | `message` | string | Sí | Mensaje de texto del usuario. No puede quedar vacío después de quitar espacios. |
 | `context` | object | No | Datos libres del usuario (nombre de curso, requisitos pendientes, etc.). Ver [El campo `context`](#el-campo-context) abajo. |
@@ -87,7 +88,10 @@ Reglas:
 - Es compartido entre los 3 bots (apoyo emocional, dudas sobre el curso, dudas sobre el contenido) porque describe al usuario, no a una conversación en particular.
 - Claves que el backend ya usa:
   - `course_name` (string): nombre del curso de la persona. Lo usa `DUDAS SOBRE EL CONTENIDO` para buscar solo en el material de ese curso. Debe coincidir (sin distinguir mayúsculas ni acentos) con un curso que tenga contenido cargado, por ejemplo `Educar para el Bienestar` o `PIBSE Educadores`. Si falta o no coincide, el bot le pregunta el curso al usuario una vez; si tampoco lo reconoce, responde la duda con todo el material disponible de todos los cursos.
-  - `course_id` (string, solo para `whatsapp_id` que empiezan con `edx:`): id del curso en la plataforma de cursos (eduNEXT), por ejemplo `course-v1:AtentaMente+EPB+2026`. Si viene, el bot sabe que la persona está inscrita en un curso y **no le pregunta su curso** (ni en apoyo emocional ni en dudas sobre el contenido). Se intenta mapear a un curso con contenido cargado (por `COURSE_ID_ALIASES` en `bot/user_context.py` o si el nombre del curso aparece dentro del id); si no se puede, apoyo emocional igual omite la pregunta y dudas sobre el contenido responde con el material de todos los cursos.
+  - `course_id` (string, solo para `whatsapp_id` que empiezan con `edx:`): id del curso en Open edX, ej. `course-v1:Atentamente+CC204+2026_PIBSE_Estudiantes_Chiapas`. Se toma el código `CCnnn`.
+  - `course_stage` (string, lo manda la app): curso + última sesión completada, ej. `CC101-S2`.
+  - Códigos: `CC100`–`CC103` = Educar para el Bienestar (taller introductorio y módulos 1–3), `CC201`–`CC204`, `CC303`, `CC304` = PIBSE, `CC104`–`CC107` = otros programas (tabla `COURSE_CODES` en `bot/user_context.py`). Con `course_id` o `course_stage` el bot **no pregunta el curso**, sabe en qué módulo y sesión va y elige el flujo: PIBSE usa el flujo ABCD; EPB, los demás programas y quien no tenga curso identificado usan el flujo de competencias socioemocionales (emoción, botón, herramientas del curso).
+  - Perfil (opcional): `nombre`, `edad`, `genero`, `ocupacion` (o `rol`/`puesto`), `escuela` (o `centro_de_trabajo`), `estado`. El bot ya **no pregunta** estos datos: saluda por nombre y adapta sus ejemplos. Solo estas claves llegan al modelo (lista cerrada en `PROFILE_FIELDS`); el resto del `context` (correo, ids, etc.) nunca se le muestra.
 - El canal se deduce del prefijo de `whatsapp_id`: número de teléfono = WhatsApp, `app:` = app de AtentaMente, `edx:` = plataforma de cursos. Los mensajes del bot son neutros: no mencionan ningún canal.
 - Cualquier otra clave se guarda y se muestra al modelo como dato de la persona, pero todavía no hay una lista fija: cada bot leerá las que necesite a medida que se implemente.
 

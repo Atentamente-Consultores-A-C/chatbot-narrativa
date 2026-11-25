@@ -31,3 +31,12 @@ def merge_contact_context(whatsapp_id: str, contact: dict, new_fields: dict) -> 
     merged = {**contact.get("context", {}), **new_fields}
     update_contact(whatsapp_id, {"context": merged})
     return merged
+
+
+def set_anonymized_id(whatsapp_id: str, anonymized_id: str) -> None:
+    """Guarda el id anónimo en contacts.anonymized_id. Si la columna todavía no existe
+    (falta correr supabase_migration_anonymized_id.sql), solo avisa: el bot sigue funcionando."""
+    try:
+        update_contact(whatsapp_id, {"anonymized_id": anonymized_id})
+    except Exception as e:
+        print(f"[Warning] No se pudo guardar anonymized_id para {whatsapp_id}: {e}")
